@@ -7,7 +7,7 @@ jobs:
     name: Publish distributions to PyPI
     environment:
       name: PyPI
-      url: https://pypi.org/project/seligimus/
+      url: https://pypi.org/project/pytest-motor/
     env:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
