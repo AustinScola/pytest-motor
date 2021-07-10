@@ -1,0 +1,2 @@
+-r test_requirements.txt
+pylint==2.8.3
