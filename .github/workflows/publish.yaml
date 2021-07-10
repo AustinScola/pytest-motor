@@ -27,9 +27,9 @@ jobs:
         cache-name: pip-packages-cache
       with:
         path: ~/.cache/pip
-        key: ${{ env.cache-name }}-deployment-${{ hashFiles('requirements/frozen/frozen_test_requirements.txt') }}
+        key: ${{ env.cache-name }}-publish-${{ hashFiles('requirements/frozen/frozen_test_requirements.txt') }}
         restore-keys: |
-          ${{ env.cache-name }}-deployment-
+          ${{ env.cache-name }}-publish-
           ${{ env.cache-name }}-
 
     - name: Build a Python source distrubution and wheel
