@@ -9,7 +9,7 @@ DISTRIBUTION_DIRECTORY="${REPO_ROOT}/dist"
 VERSION_FILE="${REPO_ROOT}/VERSION.txt"
 VERSION="$(cat "${VERSION_FILE}")"
 
-WHEEL="${DISTRIBUTION_DIRECTORY}/pytest-motor-${VERSION}-py3-none-any.whl"
+WHEEL="${DISTRIBUTION_DIRECTORY}/pytest_motor-${VERSION}-py3-none-any.whl"
 SOURCE_DISTRIBUTION="${DISTRIBUTION_DIRECTORY}/pytest-motor-${VERSION}.tar.gz"
 
 # Check that the API token has been provided.
