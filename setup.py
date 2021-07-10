@@ -15,7 +15,7 @@ _VERSION = _VERSION_FILE.read_text()
 _PACKAGES: List[str] = setuptools.find_packages(where=_HERE, include=['pytest_motor*'])
 
 setuptools.setup(
-    name='pytest_motor',
+    name='pytest-motor',
     version=_VERSION,
     author='Austin Scola',
     author_email='austinscola@gmail.com',
