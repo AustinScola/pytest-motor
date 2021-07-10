@@ -1,6 +1,6 @@
 # pytest-motor
 
-A pytest plugin for motor, the non-blocking MongoDB driver.
+A [pytest][1] plugin for motor, the non-blocking MongoDB driver.
 
 ## Example
 
@@ -14,3 +14,5 @@ async def test_using_motor_client(motor_client: AsyncIOMotorClient) -> None:
     """This test has access to a Motor client."""
     await motor_client.server_info()
 ```
+
+[1]: https://docs.pytest.org/en/latest/
