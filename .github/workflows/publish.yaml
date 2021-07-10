@@ -1,0 +1,41 @@
+name: Publish
+
+on: workflow_dispatch
+
+jobs:
+  publish:
+    name: Publish distributions to PyPI
+    environment:
+      name: PyPI
+      url: https://pypi.org/project/seligimus/
+    env:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
+    - name: Cache pip packages
+      uses: actions/cache@v2
+      env:
+        cache-name: pip-packages-cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ env.cache-name }}-deployment-${{ hashFiles('requirements/frozen/frozen_test_requirements.txt') }}
+        restore-keys: |
+          ${{ env.cache-name }}-deployment-
+          ${{ env.cache-name }}-
+
+    - name: Build a Python source distrubution and wheel
+      run: |
+        ./scripts/build.sh
+
+    - name: Publish the distributions
+      run: |
+        ./scripts/publish.sh
