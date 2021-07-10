@@ -1,0 +1,115 @@
+name: Python
+
+on: [push]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
+    - name: Cache pip packages
+      uses: actions/cache@v2
+      env:
+        cache-name: pip-packages-cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ env.cache-name }}-test-${{ hashFiles('requirements/frozen/frozen_test_requirements.txt') }}
+        restore-keys: |
+          ${{ env.cache-name }}-test-
+          ${{ env.cache-name }}-
+
+    - name: Test with pytest
+      run: |
+        ./scripts/coverage.sh
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
+    - name: Cache pip packages
+      uses: actions/cache@v2
+      env:
+        cache-name: pip-packages-cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ env.cache-name }}-lint-${{ hashFiles('requirements/frozen/frozen_lint_requirements.txt') }}
+        restore-keys: |
+          ${{ env.cache-name }}-lint-
+          ${{ env.cache-name }}-
+
+    - name: Lint with pylint
+      run: |
+        ./scripts/lint.sh
+
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
+    - name: Cache pip packages
+      uses: actions/cache@v2
+      env:
+        cache-name: pip-packages-cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ env.cache-name }}-type-check-${{ hashFiles('requirements/frozen/frozen_type_check_requirements.txt') }}
+        restore-keys: |
+          ${{ env.cache-name }}-type-check-
+          ${{ env.cache-name }}-
+
+    - name: Cache mypy cache
+      uses: AustinScola/mypy-cache-github-action@v1
+
+    - name: Type Check with mypy
+      run: |
+        ./scripts/type_check.sh
+
+  build:
+    name: Build 
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
+    - name: Cache pip packages
+      uses: actions/cache@v2
+      env:
+        cache-name: pip-packages-cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ env.cache-name }}-build-${{ hashFiles('requirements/frozen/frozen_type_check_requirements.txt') }}
+        restore-keys: |
+          ${{ env.cache-name }}-build-
+          ${{ env.cache-name }}-
+
+    - name: Build distributions
+      run: |
+        ./scripts/build.sh
