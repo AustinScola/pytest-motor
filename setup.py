@@ -19,7 +19,7 @@ setuptools.setup(
     version=_VERSION,
     author='Austin Scola',
     author_email='austinscola@gmail.com',
-    description='An abstract syntax tree transformation tool for bettering Python code.',
+    description='A pytest plugin for motor, the non-blocking MongoDB driver.',
     long_description=_LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     url='https://github.com/AustinScola/pytest_motor',
