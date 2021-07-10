@@ -1,0 +1,2 @@
+-r test_requirements.txt
+pytest-cov==2.12.1
