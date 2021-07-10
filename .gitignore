@@ -3,3 +3,4 @@
 !/venvs/.gitkeep
 /dist/*
 !/dist/.gitkeep
+/.coverage
