@@ -32,6 +32,7 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Framework :: Pytest',
+        'Topic :: Software Development :: Testing',
         'Typing :: Typed',
     ],
     python_requires='>=3.6',
