@@ -1,3 +1,4 @@
+*.pyc
 /venvs/*
 !/venvs/.gitkeep
 /dist/*
