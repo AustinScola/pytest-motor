@@ -54,21 +54,57 @@ async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefi
 
 @pytest.fixture(scope='function')
 # pylint: disable=redefined-outer-name
-async def motor_client(mongod_binary: Path,
-                       root_directory: Path) -> AsyncIterator[AsyncIOMotorClient]:
-    """Yield a MongoDB client."""
-    socket_directory = root_directory.joinpath('.mongod_sockets')
-    socket_directory.mkdir(exist_ok=True)
+async def sockets_directory(root_directory: Path) -> AsyncIterator[Path]:
+    """Yield a directory for MongodDB unix sockets."""
+    sockets_directory = root_directory.joinpath('.mongod_sockets')
+    sockets_directory.mkdir(exist_ok=True)
 
+    yield sockets_directory
+
+
+@pytest.fixture(scope='function')
+# pylint: disable=redefined-outer-name
+async def unix_socket(sockets_directory: Path) -> AsyncIterator[Path]:
+    """Yield a random unix socket in the given sockets directory."""
+    name: str = secrets.token_hex(12)
+    unix_socket = sockets_directory.joinpath(f'{name}.sock')
+
+    yield unix_socket
+
+    try:
+        unix_socket.unlink()
+    except FileNotFoundError:  # pragma: no cover
+        pass
+
+
+@pytest.fixture(scope='function')
+# pylint: disable=redefined-outer-name
+async def databases_directory(root_directory: Path) -> AsyncIterator[Path]:
+    """Yield a directory for mongod to store data."""
     databases_directory = root_directory.joinpath('.mongo_databases')
     databases_directory.mkdir(exist_ok=True)
 
-    name: str = secrets.token_hex(12)
-    unix_socket = socket_directory.joinpath(f'{name}.sock')
+    yield databases_directory
 
+
+@pytest.fixture(scope='function')
+# pylint: disable=redefined-outer-name
+async def database_path(databases_directory: Path) -> AsyncIterator[Path]:
+    """Yield a database path for a mongod process to store data."""
+    name: str = secrets.token_hex(12)
     database_path: Path = databases_directory.joinpath(name)
     database_path.mkdir()
 
+    yield database_path
+
+    shutil.rmtree(database_path, ignore_errors=True)
+
+
+@pytest.fixture(scope='function')
+# pylint: disable=redefined-outer-name
+async def mongod_socket(unix_socket: Path, database_path: Path,
+                        mongod_binary: Path) -> AsyncIterator[Path]:
+    """Yield a mongod."""
     arguments: List[str] = [
         str(mongod_binary), '--bind_ip',
         str(unix_socket), '--storageEngine', 'ephemeralForTest', '--fork', '--logpath', '/dev/null',
@@ -78,7 +114,19 @@ async def motor_client(mongod_binary: Path,
 
     mongod = await asyncio.create_subprocess_exec(*arguments)
 
-    connection_string = 'mongodb://' + urllib.parse.quote(str(unix_socket), safe='')
+    yield unix_socket
+
+    try:
+        mongod.terminate()
+    except ProcessLookupError:
+        pass
+
+
+@pytest.fixture(scope='function')
+# pylint: disable=redefined-outer-name
+async def motor_client(mongod_socket: Path) -> AsyncIterator[AsyncIOMotorClient]:
+    """Yield a Motor client."""
+    connection_string = 'mongodb://' + urllib.parse.quote(str(mongod_socket), safe='')
 
     motor_client_: AsyncIOMotorClient = \
         AsyncIOMotorClient(connection_string, serverSelectionTimeoutMS=3000)
@@ -86,15 +134,3 @@ async def motor_client(mongod_binary: Path,
     yield motor_client_
 
     motor_client_.close()
-
-    try:
-        mongod.terminate()
-    except ProcessLookupError:
-        pass
-
-    shutil.rmtree(database_path, ignore_errors=True)
-
-    try:
-        unix_socket.unlink()
-    except FileNotFoundError:  # pragma: no cover
-        pass
