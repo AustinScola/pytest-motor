@@ -54,9 +54,8 @@ async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefi
 
 @pytest.fixture(scope='function')
 # pylint: disable=redefined-outer-name
-async def motor_client(mongod_binary: Path,
-                       root_directory: Path) -> AsyncIterator[AsyncIOMotorClient]:
-    """Yield a MongoDB client."""
+async def mongod_socket(mongod_binary: Path, root_directory: Path) -> AsyncIterator[Path]:
+    """Yield a mongod."""
     socket_directory = root_directory.joinpath('.mongod_sockets')
     socket_directory.mkdir(exist_ok=True)
 
@@ -78,14 +77,7 @@ async def motor_client(mongod_binary: Path,
 
     mongod = await asyncio.create_subprocess_exec(*arguments)
 
-    connection_string = 'mongodb://' + urllib.parse.quote(str(unix_socket), safe='')
-
-    motor_client_: AsyncIOMotorClient = \
-        AsyncIOMotorClient(connection_string, serverSelectionTimeoutMS=3000)
-
-    yield motor_client_
-
-    motor_client_.close()
+    yield unix_socket
 
     try:
         mongod.terminate()
@@ -98,3 +90,17 @@ async def motor_client(mongod_binary: Path,
         unix_socket.unlink()
     except FileNotFoundError:  # pragma: no cover
         pass
+
+
+@pytest.fixture(scope='function')
+# pylint: disable=redefined-outer-name
+async def motor_client(mongod_socket: Path) -> AsyncIterator[AsyncIOMotorClient]:
+    """Yield a Motor client."""
+    connection_string = 'mongodb://' + urllib.parse.quote(str(mongod_socket), safe='')
+
+    motor_client_: AsyncIOMotorClient = \
+        AsyncIOMotorClient(connection_string, serverSelectionTimeoutMS=3000)
+
+    yield motor_client_
+
+    motor_client_.close()
