@@ -64,16 +64,28 @@ async def sockets_directory(root_directory: Path) -> AsyncIterator[Path]:
 
 @pytest.fixture(scope='function')
 # pylint: disable=redefined-outer-name
-async def mongod_socket(sockets_directory: Path, root_directory: Path,
+async def unix_socket(sockets_directory: Path) -> AsyncIterator[Path]:
+    """Yield a random unix socket in the given sockets directory."""
+    name: str = secrets.token_hex(12)
+    unix_socket = sockets_directory.joinpath(f'{name}.sock')
+
+    yield unix_socket
+
+    try:
+        unix_socket.unlink()
+    except FileNotFoundError:  # pragma: no cover
+        pass
+
+
+@pytest.fixture(scope='function')
+# pylint: disable=redefined-outer-name
+async def mongod_socket(unix_socket: Path, root_directory: Path,
                         mongod_binary: Path) -> AsyncIterator[Path]:
     """Yield a mongod."""
-
     databases_directory = root_directory.joinpath('.mongo_databases')
     databases_directory.mkdir(exist_ok=True)
 
     name: str = secrets.token_hex(12)
-    unix_socket = sockets_directory.joinpath(f'{name}.sock')
-
     database_path: Path = databases_directory.joinpath(name)
     database_path.mkdir()
 
@@ -94,11 +106,6 @@ async def mongod_socket(sockets_directory: Path, root_directory: Path,
         pass
 
     shutil.rmtree(database_path, ignore_errors=True)
-
-    try:
-        unix_socket.unlink()
-    except FileNotFoundError:  # pragma: no cover
-        pass
 
 
 @pytest.fixture(scope='function')
