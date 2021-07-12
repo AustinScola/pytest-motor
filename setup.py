@@ -22,7 +22,7 @@ setuptools.setup(
     description='A pytest plugin for motor, the non-blocking MongoDB driver.',
     long_description=_LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    url='https://github.com/AustinScola/pytest_motor',
+    url='https://github.com/AustinScola/pytest-motor',
     packages=_PACKAGES,
     package_data={'pytest_motor': ['py.typed']},
     entry_points={'pytest11': ['pytest_motor = pytest_motor.plugin']},
