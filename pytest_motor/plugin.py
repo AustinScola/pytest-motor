@@ -79,12 +79,19 @@ async def unix_socket(sockets_directory: Path) -> AsyncIterator[Path]:
 
 @pytest.fixture(scope='function')
 # pylint: disable=redefined-outer-name
-async def mongod_socket(unix_socket: Path, root_directory: Path,
-                        mongod_binary: Path) -> AsyncIterator[Path]:
-    """Yield a mongod."""
+async def databases_directory(root_directory: Path) -> AsyncIterator[Path]:
+    """Yield a directory for mongod to store data."""
     databases_directory = root_directory.joinpath('.mongo_databases')
     databases_directory.mkdir(exist_ok=True)
 
+    yield databases_directory
+
+
+@pytest.fixture(scope='function')
+# pylint: disable=redefined-outer-name
+async def mongod_socket(unix_socket: Path, databases_directory: Path,
+                        mongod_binary: Path) -> AsyncIterator[Path]:
+    """Yield a mongod."""
     name: str = secrets.token_hex(12)
     database_path: Path = databases_directory.joinpath(name)
     database_path.mkdir()
