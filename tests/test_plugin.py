@@ -14,7 +14,7 @@ def test_motor_client(testdir: Testdir) -> None:
 
     @pytest.mark.asyncio
     async def test_using_motor_client(motor_client: AsyncIOMotorClient) -> None:
-       await motor_client.server_info()
+        await motor_client.server_info()
     """)
 
     result = testdir.runpytest()
