@@ -1,12 +1,12 @@
 """A pytest plugin which helps test applications using Motor."""
+import asyncio
 import secrets
 import shutil
-import subprocess
 import tarfile
 import urllib
 import urllib.request
 from pathlib import Path
-from typing import Iterator, List, Union
+from typing import AsyncIterator, Iterator, List
 
 import pytest
 from _pytest.config import Config as PytestConfig
@@ -14,13 +14,26 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 
 @pytest.fixture(scope='session')
-def root_directory(pytestconfig: PytestConfig) -> Path:
+def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
+    """Yield an event loop.
+
+    This is necessary because pytest-asyncio needs an event loop with a with an equal or higher
+    pytest fixture scope as any of the async fixtures. And remember, pytest-asynio is what allows us
+    to have async pytest fixtures.
+    """
+    loop = asyncio.get_event_loop()
+    yield loop
+    loop.close()
+
+
+@pytest.fixture(scope='session')
+async def root_directory(pytestconfig: PytestConfig) -> Path:
     """Return the root path of pytest."""
     return pytestconfig.rootpath
 
 
 @pytest.fixture(scope='session')
-def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-outer-name
+async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-outer-name
     """Return a path to a mongod binary."""
     destination: Path = root_directory.joinpath('.mongod')
     mongod_binary_filename = destination.joinpath(
@@ -41,7 +54,8 @@ def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-ou
 
 @pytest.fixture(scope='function')
 # pylint: disable=redefined-outer-name
-def motor_client(mongod_binary: Path, root_directory: Path) -> Iterator[AsyncIOMotorClient]:
+async def motor_client(mongod_binary: Path,
+                       root_directory: Path) -> AsyncIterator[AsyncIOMotorClient]:
     """Yield a MongoDB client."""
     socket_directory = root_directory.joinpath('.mongod_sockets')
     socket_directory.mkdir(exist_ok=True)
@@ -55,24 +69,28 @@ def motor_client(mongod_binary: Path, root_directory: Path) -> Iterator[AsyncIOM
     database_path: Path = databases_directory.joinpath(name)
     database_path.mkdir()
 
-    arguments: List[Union[str, Path]] = [
-        mongod_binary, '--bind_ip', unix_socket, '--storageEngine', 'ephemeralForTest', '--fork',
-        '--logpath', '/dev/null', '--dbpath', database_path
+    arguments: List[str] = [
+        str(mongod_binary), '--bind_ip',
+        str(unix_socket), '--storageEngine', 'ephemeralForTest', '--fork', '--logpath', '/dev/null',
+        '--dbpath',
+        str(database_path)
     ]
 
-    with subprocess.Popen(arguments) as mongod:
+    mongod = await asyncio.create_subprocess_exec(*arguments)
 
-        connection_string = 'mongodb://' + urllib.parse.quote(str(unix_socket), safe='')
+    connection_string = 'mongodb://' + urllib.parse.quote(str(unix_socket), safe='')
 
-        motor_client_: AsyncIOMotorClient = \
-            AsyncIOMotorClient(connection_string, serverSelectionTimeoutMS=3000)
+    motor_client_: AsyncIOMotorClient = \
+        AsyncIOMotorClient(connection_string, serverSelectionTimeoutMS=3000)
 
-        yield motor_client_
+    yield motor_client_
 
-        motor_client_.close()
+    motor_client_.close()
 
+    try:
         mongod.terminate()
-        mongod.wait()
+    except ProcessLookupError:
+        pass
 
     shutil.rmtree(database_path, ignore_errors=True)
 
