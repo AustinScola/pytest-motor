@@ -89,13 +89,22 @@ async def databases_directory(root_directory: Path) -> AsyncIterator[Path]:
 
 @pytest.fixture(scope='function')
 # pylint: disable=redefined-outer-name
-async def mongod_socket(unix_socket: Path, databases_directory: Path,
-                        mongod_binary: Path) -> AsyncIterator[Path]:
-    """Yield a mongod."""
+async def database_path(databases_directory: Path) -> AsyncIterator[Path]:
+    """Yield a database path for a mongod process to store data."""
     name: str = secrets.token_hex(12)
     database_path: Path = databases_directory.joinpath(name)
     database_path.mkdir()
 
+    yield database_path
+
+    shutil.rmtree(database_path, ignore_errors=True)
+
+
+@pytest.fixture(scope='function')
+# pylint: disable=redefined-outer-name
+async def mongod_socket(unix_socket: Path, database_path: Path,
+                        mongod_binary: Path) -> AsyncIterator[Path]:
+    """Yield a mongod."""
     arguments: List[str] = [
         str(mongod_binary), '--bind_ip',
         str(unix_socket), '--storageEngine', 'ephemeralForTest', '--fork', '--logpath', '/dev/null',
@@ -111,8 +120,6 @@ async def mongod_socket(unix_socket: Path, databases_directory: Path,
         mongod.terminate()
     except ProcessLookupError:
         pass
-
-    shutil.rmtree(database_path, ignore_errors=True)
 
 
 @pytest.fixture(scope='function')
