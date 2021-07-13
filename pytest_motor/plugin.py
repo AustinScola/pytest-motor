@@ -1,5 +1,6 @@
 """A pytest plugin which helps test applications using Motor."""
 import asyncio
+import platform
 import secrets
 import shutil
 import tarfile
@@ -33,21 +34,21 @@ async def root_directory(pytestconfig: PytestConfig) -> Path:
 
 
 @pytest.fixture(scope='session')
-async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-outer-name
+def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-outer-name
     """Return a path to a mongod binary."""
     destination: Path = root_directory.joinpath('.mongod')
     mongod_binary_filename = destination.joinpath(
-        'mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod')
+        f'{__mongo_exec()}/bin/mongod')
 
     if not mongod_binary_filename.exists():
-        download_url = 'https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.4.6.tgz'
+        download_url = f'https://fastdl.mongodb.org/osx/{__mongo_exec()}.tgz'
         (tar_filename, _) = urllib.request.urlretrieve(download_url)
 
         with tarfile.open(tar_filename) as tar:
-            tar.extract(member='mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod', path=destination)
+            tar.extract(member=f'{__mongo_exec()}/bin/mongod', path=destination)
 
         mongod_binary_filename = destination.joinpath(
-            'mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod')
+            f'{__mongo_exec()}/bin/mongod')
 
     return mongod_binary_filename
 
@@ -134,3 +135,12 @@ async def motor_client(mongod_socket: Path) -> AsyncIterator[AsyncIOMotorClient]
     yield motor_client_
 
     motor_client_.close()
+
+
+def __mongo_exec() -> str:
+    if platform.system() == 'Linux':
+        return 'mongodb-linux-x86_64-ubuntu1804-4.4.6'
+    elif platform.system() == 'Darwin':
+        return 'mongodb-macos-x86_64-4.4.6'
+    else:
+        raise Exception("Unsupported platform")
