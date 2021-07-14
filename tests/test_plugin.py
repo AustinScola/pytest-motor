@@ -1,4 +1,6 @@
 """Test pytest_motor.plugin."""
+from pathlib import Path
+
 from pytest import Testdir
 
 
@@ -8,14 +10,12 @@ def test_motor_client(testdir: Testdir) -> None:
     pytest_plugins=["pytest_asyncio", "pytest_motor.plugin"]
     """)
 
-    testdir.makepyfile("""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    import pytest
+    test_files_directory = Path(__file__).parent.parent / 'test_data' / 'files'
+    not_init_file = lambda path: path.name != '__init__.py'
+    test_files = filter(not_init_file, test_files_directory.glob('*.py'))
 
-    @pytest.mark.asyncio
-    async def test_using_motor_client(motor_client: AsyncIOMotorClient) -> None:
-        await motor_client.server_info()
-    """)
+    for test_file in test_files:
+        testdir.makepyfile(test_file.read_text())
 
     result = testdir.runpytest()
 
