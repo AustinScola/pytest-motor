@@ -19,4 +19,4 @@ def test_motor_client(testdir: Testdir) -> None:
 
     result = testdir.runpytest()
 
-    result.assert_outcomes(passed=2)
+    result.assert_outcomes(passed=3)
