@@ -4,13 +4,13 @@ import platform
 import secrets
 import shutil
 import tarfile
+import tempfile
 import urllib
 import urllib.request
 from pathlib import Path
 from typing import AsyncIterator, Iterator, List
 
 import pytest
-from _pytest.config import Config as PytestConfig
 from motor.motor_asyncio import AsyncIOMotorClient
 
 
@@ -28,27 +28,26 @@ def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
 
 
 @pytest.fixture(scope='session')
-async def root_directory(pytestconfig: PytestConfig) -> Path:
-    """Return the root path of pytest."""
-    return pytestconfig.rootpath
+async def root_directory() -> Path:
+    """Return the working path."""
+    return Path(tempfile.gettempdir())
 
 
 @pytest.fixture(scope='session')
 def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-outer-name
     """Return a path to a mongod binary."""
     destination: Path = root_directory.joinpath('.mongod')
-    mongod_binary_filename = destination.joinpath(
-        f'{__mongo_exec()}/bin/mongod')
+    mongo_ver = _mongo_ver()
+    mongod_binary_filename = destination.joinpath(f'{mongo_ver}/bin/mongod')
 
     if not mongod_binary_filename.exists():
-        download_url = f'https://fastdl.mongodb.org/osx/{__mongo_exec()}.tgz'
+        download_url = f'https://fastdl.mongodb.org/osx/{mongo_ver}.tgz'
         (tar_filename, _) = urllib.request.urlretrieve(download_url)
 
         with tarfile.open(tar_filename) as tar:
-            tar.extract(member=f'{__mongo_exec()}/bin/mongod', path=destination)
+            tar.extract(member=f'{mongo_ver}/bin/mongod', path=destination)
 
-        mongod_binary_filename = destination.joinpath(
-            f'{__mongo_exec()}/bin/mongod')
+        mongod_binary_filename = destination.joinpath(f'{mongo_ver}/bin/mongod')
 
     return mongod_binary_filename
 
@@ -137,10 +136,13 @@ async def motor_client(mongod_socket: Path) -> AsyncIterator[AsyncIOMotorClient]
     motor_client_.close()
 
 
-def __mongo_exec() -> str:
+def _mongo_ver() -> str:
+    """Return mongo version based on platform system."""
     if platform.system() == 'Linux':
-        return 'mongodb-linux-x86_64-ubuntu1804-4.4.6'
+        mongo_exec = 'mongodb-linux-x86_64-ubuntu1804-4.4.6'
     elif platform.system() == 'Darwin':
-        return 'mongodb-macos-x86_64-4.4.6'
+        mongo_exec = 'mongodb-macos-x86_64-4.4.6'
     else:
         raise Exception("Unsupported platform")
+
+    return mongo_exec

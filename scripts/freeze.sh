@@ -1,4 +1,4 @@
-HERE="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+HERE="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 REPO_ROOT="$(realpath "${HERE}/..")"
 REQUIREMENTS_DIRECTORY="${REPO_ROOT}/requirements"
 FROZEN_REQUIREMENTS_DIRECTORY="${REQUIREMENTS_DIRECTORY}/frozen"

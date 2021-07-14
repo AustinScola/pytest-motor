@@ -1,5 +1,7 @@
 """Test pytest_motor.plugin."""
-from pytest import Testdir
+from pytest import Testdir, raises
+
+from pytest_motor.plugin import _mongo_ver
 
 
 def test_motor_client(testdir: Testdir) -> None:
@@ -20,3 +22,16 @@ def test_motor_client(testdir: Testdir) -> None:
     result = testdir.runpytest()
 
     result.assert_outcomes(passed=1)
+
+
+def test_mongo_ver(monkeypatch):
+    """Test mongo version based on platform system."""
+    monkeypatch.setattr("platform.system", lambda: "Darwin")
+    assert _mongo_ver() == "mongodb-macos-x86_64-4.4.6"
+
+    monkeypatch.setattr("platform.system", lambda: "Linux")
+    assert _mongo_ver() == "mongodb-linux-x86_64-ubuntu1804-4.4.6"
+
+    monkeypatch.setattr("platform.system", lambda: "Windows")
+    with raises(Exception):
+        _mongo_ver()
