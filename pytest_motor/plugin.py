@@ -1,16 +1,17 @@
 """A pytest plugin which helps test applications using Motor."""
 import asyncio
+import os
 import platform
 import secrets
 import shutil
 import tarfile
-import tempfile
 import urllib
 import urllib.request
 from pathlib import Path
-from typing import AsyncIterator, Iterator, List
+from typing import AsyncIterator, Iterator, List, Tuple
 
 import pytest
+from _pytest.config import Config as PytestConfig
 from motor.motor_asyncio import AsyncIOMotorClient
 
 
@@ -28,20 +29,27 @@ def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
 
 
 @pytest.fixture(scope='session')
-async def root_directory() -> Path:
-    """Return the working path."""
-    return Path(tempfile.gettempdir())
+async def root_directory(pytestconfig: PytestConfig) -> Path:
+    """Return the root path of pytest"""
+    env_path = os.environ.get("PYTEST_MOTOR_PATH", None)
+
+    if env_path:
+        path = Path(env_path)  # pragma: no cover
+    else:
+        path = pytestconfig.rootpath  # pragma: no cover
+
+    return path
 
 
 @pytest.fixture(scope='session')
 def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-outer-name
     """Return a path to a mongod binary."""
     destination: Path = root_directory.joinpath('.mongod')
-    mongo_ver = _mongo_ver()
+    os_ver, mongo_ver = _mongo_ver()
     mongod_binary_filename = destination.joinpath(f'{mongo_ver}/bin/mongod')
 
     if not mongod_binary_filename.exists():
-        download_url = f'https://fastdl.mongodb.org/osx/{mongo_ver}.tgz'
+        download_url = f'https://fastdl.mongodb.org/{os_ver}/{mongo_ver}.tgz'
         (tar_filename, _) = urllib.request.urlretrieve(download_url)
 
         with tarfile.open(tar_filename) as tar:
@@ -136,12 +144,12 @@ async def motor_client(mongod_socket: Path) -> AsyncIterator[AsyncIOMotorClient]
     motor_client_.close()
 
 
-def _mongo_ver() -> str:
+def _mongo_ver() -> Tuple[str, str]:
     """Return mongo version based on platform system."""
     if platform.system() == 'Linux':
-        mongo_exec = 'mongodb-linux-x86_64-ubuntu1804-4.4.6'
+        mongo_exec = "linux", 'mongodb-linux-x86_64-ubuntu1804-4.4.6'
     elif platform.system() == 'Darwin':
-        mongo_exec = 'mongodb-macos-x86_64-4.4.6'
+        mongo_exec = "osx", 'mongodb-macos-x86_64-4.4.6'
     else:
         raise Exception("Unsupported platform")
 
