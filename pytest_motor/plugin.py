@@ -2,13 +2,12 @@
 import asyncio
 import secrets
 import shutil
+import socket
 import tarfile
 from pathlib import Path
 from typing import AsyncIterator, Iterator, List
-import socket
 
 import aiohttp
-
 import pytest
 from _pytest.config import Config as PytestConfig
 from motor.motor_asyncio import AsyncIOMotorClient
