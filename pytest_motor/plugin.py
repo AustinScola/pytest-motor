@@ -4,6 +4,7 @@ import secrets
 import shutil
 import socket
 import tarfile
+import tempfile
 from pathlib import Path
 from typing import AsyncIterator, Iterator, List
 
@@ -58,7 +59,7 @@ async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefi
         download_url = 'https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.4.6.tgz'
         async with aiohttp.ClientSession() as session:
             async with session.get(download_url) as resp:
-                with open('binaries.tar', 'wb') as binary_file:
+                with tempfile.TemporaryFile(mode='w+b') as binary_file:
                     # Read by chunks to avoid big RAM consumption
                     while True:
                         # read by 100 bytes
@@ -66,9 +67,11 @@ async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefi
                         if not chunk:
                             break
                         binary_file.write(chunk)
-
-        with tarfile.open("binaries.tar") as tar:
-            tar.extract(member='mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod', path=destination)
+                    binary_file.flush()
+                    binary_file.seek(0)
+                    # Extract tar
+                    with tarfile.open(fileobj=binary_file) as tar:
+                        tar.extract(member=mongod_binary_relative_path, path=destination)
 
     return mongod_binary_path
 
