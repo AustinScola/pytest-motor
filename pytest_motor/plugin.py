@@ -131,7 +131,7 @@ async def mongod_socket(new_port: int, database_path: Path,
 
     try:
         mongod.terminate()
-    except ProcessLookupError:
+    except ProcessLookupError:  # pragma: no cover
         pass
 
 
