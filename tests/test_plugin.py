@@ -8,6 +8,24 @@ from pytest import Testdir
 
 from pytest_motor.plugin import _event_loop
 
+# pylint: disable=redefined-outer-name
+
+test_files_directory = Path(__file__).parent.parent / 'test_data' / 'files'
+# yapf: disable
+test_files = {
+    path_to_file.name: path_to_file
+    for path_to_file in test_files_directory.glob('*.py')
+    if path_to_file.name != '__init__.py'
+}
+# yapf: enable
+
+
+@pytest.fixture
+def read_conftest() -> str:
+    """Reads conftest.py"""
+    conftest_file = Path(__file__).parent / 'conftest.py'
+    return conftest_file.read_text()
+
 
 def test_event_loop() -> None:
     """Test pytest_motor.plugin._event_loop."""
@@ -26,19 +44,33 @@ def test_event_loop() -> None:
     mock_close.assert_called_once()
 
 
-def test_motor_client(testdir: Testdir) -> None:
+def test_new_port(testdir: Testdir, read_conftest: str) -> None:
+    """Test pytest_motor.plugin.new_port."""
+    assert 'port_tests.py' in test_files.keys()
+    testdir.makeconftest(read_conftest)
+    testdir.makepyfile(test_files['port_tests.py'].read_text())
+    testdir.runpytest().assert_outcomes(passed=3)
+
+
+def test_mongod_binary_downloader(testdir: Testdir, read_conftest: str) -> None:
+    """Test pytest_motor.plugin.mongod_binary."""
+    assert 'binary_downloader_tests.py' in test_files.keys()
+    testdir.makeconftest(read_conftest)
+    testdir.makepyfile(test_files['binary_downloader_tests.py'].read_text())
+    testdir.runpytest().assert_outcomes(passed=1)
+
+
+def test_integration_motor_client(testdir: Testdir, read_conftest: str) -> None:
     """Test pytest_motor.plugin.motor_client."""
-    testdir.makeconftest("""
-    pytest_plugins=["pytest_asyncio", "pytest_motor.plugin"]
-    """)
+    assert 'server_info_test.py' in test_files.keys()
+    testdir.makeconftest(read_conftest)
+    testdir.makepyfile(test_files['server_info_test.py'].read_text())
+    testdir.runpytest().assert_outcomes(passed=1)
 
-    test_files_directory = Path(__file__).parent.parent / 'test_data' / 'files'
-    not_init_file = lambda path: path.name != '__init__.py'
-    test_files = filter(not_init_file, test_files_directory.glob('*.py'))
 
-    for test_file in test_files:
-        testdir.makepyfile(test_file.read_text())
-
-    result = testdir.runpytest()
-
-    result.assert_outcomes(passed=2)
+def test_integration_clients_independence(testdir: Testdir, read_conftest: str) -> None:
+    """Test pytest_motor.plugin.motor_client."""
+    assert 'independence_tests.py' in test_files.keys()
+    testdir.makeconftest(read_conftest)
+    testdir.makepyfile(test_files['independence_tests.py'].read_text())
+    testdir.runpytest().assert_outcomes(passed=2)
