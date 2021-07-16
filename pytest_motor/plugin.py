@@ -52,9 +52,9 @@ async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefi
     """Return a path to a mongod binary."""
     destination: Path = root_directory.joinpath('.mongod')
     mongod_binary_relative_path = 'mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod'
-    mongod_binary_filename = destination.joinpath(mongod_binary_relative_path)
+    mongod_binary_path = destination.joinpath(mongod_binary_relative_path)
 
-    if not mongod_binary_filename.exists():
+    if not mongod_binary_path.exists():
         download_url = 'https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.4.6.tgz'
         async with aiohttp.ClientSession() as session:
             async with session.get(download_url) as resp:
@@ -70,7 +70,7 @@ async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefi
         with tarfile.open("binaries.tar") as tar:
             tar.extract(member='mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod', path=destination)
 
-    return mongod_binary_filename
+    return mongod_binary_path
 
 
 @pytest.fixture(scope='function')
