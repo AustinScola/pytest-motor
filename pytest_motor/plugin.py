@@ -2,12 +2,13 @@
 import asyncio
 import secrets
 import shutil
+import socket
 import tarfile
-import urllib
-import urllib.request
+import tempfile
 from pathlib import Path
 from typing import AsyncIterator, Iterator, List
 
+import aiohttp
 import pytest
 from _pytest.config import Config as PytestConfig
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -51,45 +52,38 @@ async def root_directory(pytestconfig: PytestConfig) -> Path:
 async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-outer-name
     """Return a path to a mongod binary."""
     destination: Path = root_directory.joinpath('.mongod')
-    mongod_binary_filename = destination.joinpath(
-        'mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod')
+    mongod_binary_relative_path = 'mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod'
+    mongod_binary_path = destination.joinpath(mongod_binary_relative_path)
 
-    if not mongod_binary_filename.exists():
+    if not mongod_binary_path.exists():
         download_url = 'https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.4.6.tgz'
-        (tar_filename, _) = urllib.request.urlretrieve(download_url)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(download_url) as resp:
+                with tempfile.TemporaryFile(mode='w+b') as binary_file:
+                    # Read by chunks to avoid big RAM consumption
+                    while True:
+                        # read by 100 bytes
+                        chunk = await resp.content.read(100)
+                        if not chunk:
+                            break
+                        binary_file.write(chunk)
+                    binary_file.flush()
+                    binary_file.seek(0)
+                    # Extract tar
+                    with tarfile.open(fileobj=binary_file) as tar:
+                        tar.extract(member=mongod_binary_relative_path, path=destination)
 
-        with tarfile.open(tar_filename) as tar:
-            tar.extract(member='mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod', path=destination)
-
-        mongod_binary_filename = destination.joinpath(
-            'mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod')
-
-    return mongod_binary_filename
-
-
-@pytest.fixture(scope='function')
-# pylint: disable=redefined-outer-name
-async def sockets_directory(root_directory: Path) -> AsyncIterator[Path]:
-    """Yield a directory for MongodDB unix sockets."""
-    sockets_directory = root_directory.joinpath('.mongod_sockets')
-    sockets_directory.mkdir(exist_ok=True)
-
-    yield sockets_directory
+    return mongod_binary_path
 
 
 @pytest.fixture(scope='function')
-# pylint: disable=redefined-outer-name
-async def unix_socket(sockets_directory: Path) -> AsyncIterator[Path]:
-    """Yield a random unix socket in the given sockets directory."""
-    name: str = secrets.token_hex(12)
-    unix_socket = sockets_directory.joinpath(f'{name}.sock')
-
-    yield unix_socket
-
-    try:
-        unix_socket.unlink()
-    except FileNotFoundError:  # pragma: no cover
-        pass
+def new_port() -> int:
+    """Return an unused port for mongod to run on."""
+    port: int = 27017
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as opened_socket:
+        opened_socket.bind(("127.0.0.1", 0))  # system will automaticly assign port
+        port = opened_socket.getsockname()[1]
+    return port
 
 
 @pytest.fixture(scope='function')
@@ -117,31 +111,35 @@ async def database_path(databases_directory: Path) -> AsyncIterator[Path]:
 
 @pytest.fixture(scope='function')
 # pylint: disable=redefined-outer-name
-async def mongod_socket(unix_socket: Path, database_path: Path,
-                        mongod_binary: Path) -> AsyncIterator[Path]:
+async def mongod_socket(new_port: int, database_path: Path,
+                        mongod_binary: Path) -> AsyncIterator[str]:
     """Yield a mongod."""
+    # yapf: disable
     arguments: List[str] = [
-        str(mongod_binary), '--bind_ip',
-        str(unix_socket), '--storageEngine', 'ephemeralForTest', '--fork', '--logpath', '/dev/null',
-        '--dbpath',
-        str(database_path)
+        str(mongod_binary),
+        '--port', str(new_port),
+        '--storageEngine', 'ephemeralForTest',
+        '--logpath', '/dev/null',
+        '--dbpath', str(database_path)
     ]
+    # yapf: enable
 
     mongod = await asyncio.create_subprocess_exec(*arguments)
 
-    yield unix_socket
+    # mongodb binds to localhost by default
+    yield f'localhost:{new_port}'
 
     try:
         mongod.terminate()
-    except ProcessLookupError:
+    except ProcessLookupError:  # pragma: no cover
         pass
 
 
 @pytest.fixture(scope='function')
 # pylint: disable=redefined-outer-name
-async def motor_client(mongod_socket: Path) -> AsyncIterator[AsyncIOMotorClient]:
+async def motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
     """Yield a Motor client."""
-    connection_string = 'mongodb://' + urllib.parse.quote(str(mongod_socket), safe='')
+    connection_string = f'mongodb://{mongod_socket}'
 
     motor_client_: AsyncIOMotorClient = \
         AsyncIOMotorClient(connection_string, serverSelectionTimeoutMS=3000)

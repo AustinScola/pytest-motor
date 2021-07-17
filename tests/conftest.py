@@ -1,3 +1,3 @@
 """Pytest configuration."""
 
-pytest_plugins = 'pytester'  # pylint: disable=invalid-name
+pytest_plugins = ['pytester', 'pytest_asyncio', 'pytest_motor.plugin']
