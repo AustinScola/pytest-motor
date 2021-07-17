@@ -1,12 +1,13 @@
 """A pytest plugin which helps test applications using Motor."""
 import asyncio
+import platform
 import secrets
 import shutil
 import socket
 import tarfile
 import tempfile
 from pathlib import Path
-from typing import AsyncIterator, Iterator, List
+from typing import AsyncIterator, Iterator, List, Tuple
 
 import aiohttp
 import pytest
@@ -52,11 +53,12 @@ async def root_directory(pytestconfig: PytestConfig) -> Path:
 async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-outer-name
     """Return a path to a mongod binary."""
     destination: Path = root_directory.joinpath('.mongod')
-    mongod_binary_relative_path = 'mongodb-linux-x86_64-ubuntu1804-4.4.6/bin/mongod'
+    os_ver, mongo_ver = _mongo_ver()
+    mongod_binary_relative_path = f'{mongo_ver}/bin/mongod'
     mongod_binary_path = destination.joinpath(mongod_binary_relative_path)
 
     if not mongod_binary_path.exists():
-        download_url = 'https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.4.6.tgz'
+        download_url = f'https://fastdl.mongodb.org/{os_ver}/{mongo_ver}.tgz'
         async with aiohttp.ClientSession() as session:
             async with session.get(download_url) as resp:
                 with tempfile.TemporaryFile(mode='w+b') as binary_file:
@@ -147,3 +149,15 @@ async def motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
     yield motor_client_
 
     motor_client_.close()
+
+
+def _mongo_ver() -> Tuple[str, str]:
+    """Return mongo version based on platform system."""
+    if platform.system() == 'Linux':
+        mongo_exec = "linux", 'mongodb-linux-x86_64-ubuntu1804-4.4.6'
+    elif platform.system() == 'Darwin':
+        mongo_exec = "osx", 'mongodb-macos-x86_64-4.4.6'
+    else:
+        raise Exception("Unsupported platform")
+
+    return mongo_exec
