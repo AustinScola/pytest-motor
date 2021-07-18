@@ -1,7 +1,7 @@
 """A test file with a single test that retrieves the Motor client server info."""
 import pytest
-from pymongo.errors import ServerSelectionTimeoutError
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import ServerSelectionTimeoutError
 
 
 @pytest.mark.asyncio
