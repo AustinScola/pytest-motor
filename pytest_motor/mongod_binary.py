@@ -132,7 +132,8 @@ class MongodBinary:
     @staticmethod
     def __select_debian_version() -> str:
         if bool(distro.major_version()) and int(distro.major_version()) < 9:
-            raise OSError("Your Debian version is too old. Upgrade at least to 9.")
+            raise OSError(
+                "Your Debian version is too old. Upgrade at least to 9.")  # pragma: no cover
 
         if distro.version() == '9.2':
             MongodBinary.warn_untested_os()
