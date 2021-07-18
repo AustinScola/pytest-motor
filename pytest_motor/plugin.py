@@ -27,20 +27,7 @@ def _event_loop() -> Iterator[asyncio.AbstractEventLoop]:
     loop.close()
 
 
-pytest.fixture(fixture_function=_event_loop, scope='session', name="event_loop")
-
-
-@pytest.fixture(scope='session')
-def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
-    """Yield an event loop.
-
-    This is necessary because pytest-asyncio needs an event loop with a with an equal or higher
-    pytest fixture scope as any of the async fixtures. And remember, pytest-asynio is what allows us
-    to have async pytest fixtures.
-    """
-    loop = asyncio.get_event_loop()
-    yield loop
-    loop.close()
+event_loop = pytest.fixture(fixture_function=_event_loop, scope='session', name="event_loop")
 
 
 @pytest.fixture(scope='session')
