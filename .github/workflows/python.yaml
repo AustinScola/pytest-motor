@@ -119,3 +119,32 @@ jobs:
     - name: Build distributions
       run: |
         ./scripts/build.sh
+
+  check-formatting:
+    name: Check formatting
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
+    - name: Cache pip packages
+      uses: actions/cache@v2
+      env:
+        cache-name: pip-packages-cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ env.cache-name }}-format-${{ hashFiles('requirements/frozen/frozen_type_check_requirements.txt') }}
+        restore-keys: |
+          ${{ env.cache-name }}-format-
+          ${{ env.cache-name }}-
+
+    - name: Format the repository
+      run: ./scripts/format.sh
+
+    - name: Check formatting
+      run: git diff --exit-code
