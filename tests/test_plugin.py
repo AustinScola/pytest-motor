@@ -76,3 +76,11 @@ def test_integration_clients_independence(testdir: Testdir, read_conftest: str) 
     testdir.makeconftest(read_conftest)
     testdir.makepyfile(test_files['independence_tests.py'].read_text())
     testdir.runpytest().assert_outcomes(passed=2)
+
+
+def test_integration_parametrized_test(testdir: Testdir, read_conftest: str) -> None:
+    """Test pytest_motor.plugin.motor_client."""
+    assert 'paramatrized_test.py' in test_files.keys()
+    testdir.makeconftest(read_conftest)
+    testdir.makepyfile(test_files['paramatrized_test.py'].read_text())
+    testdir.runpytest().assert_outcomes(passed=3)
