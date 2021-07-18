@@ -17,8 +17,8 @@ async def test_using_motor_client(motor_client: AsyncIOMotorClient) -> None:
 
 ## Limitations
 
-`pytest-motor` currently only supports Ubuntu 18.04. Support for MacOS and Windows is being worked
-on. If you would like support for another system, please [make a GitHub Issue][3]. Contributions are
+`pytest-motor` currently only supports Ubuntu 18.04 and MacOS. Windows support is being worked on.
+If you would like support for another system, please [make a GitHub Issue][3]. Contributions are
 welcome!
 
 [1]: https://docs.pytest.org/en/latest/
