@@ -4,7 +4,9 @@ import socket
 from pathlib import Path
 
 import pytest
+
 from pytest_motor.plugin import new_port
+
 # pylint: disable=redefined-outer-name
 
 
