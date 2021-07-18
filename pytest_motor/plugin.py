@@ -10,9 +10,7 @@ import pytest
 from _pytest.config import Config as PytestConfig
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from .mongod_binary import MongodBinary
-
-# pylint: disable=redefined-outer-name
+from pytest_motor.mongod_binary import MongodBinary
 
 
 def _event_loop() -> Iterator[asyncio.AbstractEventLoop]:
@@ -51,10 +49,11 @@ async def root_directory(pytestconfig: PytestConfig) -> Path:
 
 @pytest.fixture(scope='session')
 async def mongod_binary(root_directory: Path) -> Path:
+    # pylint: disable=redefined-outer-name
     """Return a path to a mongod binary."""
     destination: Path = root_directory / '.mongod'
     binary = MongodBinary(destination=destination)
-    if not binary.path.exists():
+    if not binary.exists:
         await binary.download_and_unpack()
     return binary.path
 
@@ -71,6 +70,7 @@ def new_port() -> int:
 
 @pytest.fixture(scope='function')
 async def databases_directory(root_directory: Path) -> AsyncIterator[Path]:
+    # pylint: disable=redefined-outer-name
     """Yield a directory for mongod to store data."""
     databases_directory = root_directory.joinpath('.mongo_databases')
     databases_directory.mkdir(exist_ok=True)
@@ -80,6 +80,7 @@ async def databases_directory(root_directory: Path) -> AsyncIterator[Path]:
 
 @pytest.fixture(scope='function')
 async def database_path(databases_directory: Path) -> AsyncIterator[Path]:
+    # pylint: disable=redefined-outer-name
     """Yield a database path for a mongod process to store data."""
     name: str = secrets.token_hex(12)
     database_path: Path = databases_directory.joinpath(name)
@@ -93,6 +94,7 @@ async def database_path(databases_directory: Path) -> AsyncIterator[Path]:
 @pytest.fixture(scope='function')
 async def mongod_socket(new_port: int, database_path: Path,
                         mongod_binary: Path) -> AsyncIterator[str]:
+    # pylint: disable=redefined-outer-name
     """Yield a mongod."""
     # yapf: disable
     arguments: List[str] = [
@@ -117,6 +119,7 @@ async def mongod_socket(new_port: int, database_path: Path,
 
 @pytest.fixture(scope='function')
 async def motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
+    # pylint: disable=redefined-outer-name
     """Yield a Motor client."""
     connection_string = f'mongodb://{mongod_socket}'
 

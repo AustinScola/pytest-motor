@@ -8,8 +8,6 @@ from pytest import Testdir
 
 from pytest_motor.plugin import _event_loop
 
-# pylint: disable=redefined-outer-name
-
 test_files_directory = Path(__file__).parent.parent / 'test_data' / 'files'
 # yapf: disable
 test_files = {
@@ -45,6 +43,7 @@ def test_event_loop() -> None:
 
 
 def test_new_port(testdir: Testdir, read_conftest: str) -> None:
+    # pylint: disable=redefined-outer-name
     """Test pytest_motor.plugin.new_port."""
     assert 'port_tests.py' in test_files.keys()
     testdir.makeconftest(read_conftest)
@@ -53,6 +52,7 @@ def test_new_port(testdir: Testdir, read_conftest: str) -> None:
 
 
 def test_mongod_binary_downloader(testdir: Testdir, read_conftest: str) -> None:
+    # pylint: disable=redefined-outer-name
     """Test pytest_motor.plugin.mongod_binary."""
     assert 'binary_downloader_tests.py' in test_files.keys()
     testdir.makeconftest(read_conftest)
@@ -61,6 +61,7 @@ def test_mongod_binary_downloader(testdir: Testdir, read_conftest: str) -> None:
 
 
 def test_integration_motor_client(testdir: Testdir, read_conftest: str) -> None:
+    # pylint: disable=redefined-outer-name
     """Test pytest_motor.plugin.motor_client."""
     assert 'server_info_test.py' in test_files.keys()
     testdir.makeconftest(read_conftest)
@@ -69,6 +70,7 @@ def test_integration_motor_client(testdir: Testdir, read_conftest: str) -> None:
 
 
 def test_integration_clients_independence(testdir: Testdir, read_conftest: str) -> None:
+    # pylint: disable=redefined-outer-name
     """Test pytest_motor.plugin.motor_client."""
     assert 'independence_tests.py' in test_files.keys()
     testdir.makeconftest(read_conftest)

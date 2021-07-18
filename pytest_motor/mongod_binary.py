@@ -18,74 +18,35 @@ class MongodBinary:
 
     def __init__(self, destination: Path):
         destination.mkdir(parents=True, exist_ok=True)
-        self.path: Path = destination / f'mongod{".exe" if platform.system() == "Windows" else ""}'
+        self.path: Path = destination / self.binary_name
         self.url: str = f'https://fastdl.mongodb.org/' \
-                        f'{self.mongo_running_os()}/' \
-                        f'mongodb-{self.mongo_platform()}-' \
+                        f'{self.current_os}/' \
+                        f'mongodb-{self.current_platform}-' \
                         f'{self.MONGO_VERSION}.' \
                         f'{"zip" if platform.system() == "Windows" else "tgz"}'
 
-    async def download_and_unpack(self) -> Path:
-        """Return path to downloaded and unpacked mongod binary."""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(self.url) as resp:
-                with tempfile.TemporaryFile(mode='w+b') as binary_file:
-                    # Read by chunks to avoid big RAM consumption
-                    while True:
-                        # read by 100 bytes
-                        chunk = await resp.content.read(100)
-                        if not chunk:
-                            break
-                        binary_file.write(chunk)
-                    binary_file.flush()
-                    binary_file.seek(0)
-                    self.__unpack(binary_file)
-                    return self.path
+    @property
+    def exists(self) -> bool:
+        """Return true if mongodb binary already exists."""
+        return self.path.exists()  # pragma: no cover
 
-    def __unpack(self, binary_file: IO[bytes]) -> None:
-        """Unpack mongod binary from zip or tar."""
-        # pylint: disable=consider-using-with
-        if str(self.url).endswith('.tgz'):
-            with tarfile.open(fileobj=binary_file) as archive_tar:
-                file_in_archive = archive_tar.extractfile(
-                    f'mongodb-{self.mongo_platform()}-{self.MONGO_VERSION}/bin/mongod')
-                if file_in_archive is None:  # pragma: no cover
-                    raise FileNotFoundError
-                file_outside = self.path.open(mode="wb")
-                with file_in_archive, file_outside:
-                    shutil.copyfileobj(file_in_archive, file_outside)
-                self.path.chmod(0o777)
-            assert self.path.exists(), "Unsuccessful mongod binary extraction"
-            return
-        if str(self.url).endswith('.zip') and self.mongo_platform() == 'windows-x86_64':
-            with ZipFile(file=binary_file, mode='r') as archive_zip:
-                file_in_archive = archive_zip.open(
-                    f'mongodb-win32-x86_64-windows-{self.MONGO_VERSION}/bin/mongod.exe')
-                if file_in_archive is None:  # pragma: no cover
-                    raise FileNotFoundError
-                file_outside = self.path.open(mode="wb")
-                with file_in_archive, file_outside:
-                    shutil.copyfileobj(file_in_archive, file_outside)
-                self.path.chmod(0o777)
-            assert self.path.exists(), "Unsuccessful mongod binary extraction"
-            return
-        # pylint: enable=consider-using-with
-        raise Exception("Unsupported archive format.")  # pragma: no cover
-
-    @staticmethod
-    def mongo_running_os() -> str:
+    @property
+    def current_os(self) -> str:
         """Return OS as it spells in mongodb binary url."""
+        translation = {'Linux': 'linux', 'Darwin': 'osx', 'Windows': 'windows'}
         system: str = platform.system()
-        if system == 'Linux':
-            return 'linux'
-        if system == 'Darwin':
-            return 'osx'
-        if system == 'Windows':
-            return 'windows'
-        raise OSError("Your platform is unsupported.")
+        result = translation.get(system)
+        if result is None:
+            raise OSError("Your platform is unsupported.")
+        return result
 
-    @staticmethod
-    def mongo_platform() -> str:
+    @property
+    def binary_name(self) -> str:
+        """Return mongodb binary name with extension."""
+        return f'mongod{".exe" if platform.system() == "Windows" else ""}'  # pragma: no cover
+
+    @property
+    def current_platform(self) -> str:
         """Return mongo platform as it spells in mongodb binary url."""
         # FUTURE: ARM support
         system = platform.system()
@@ -106,13 +67,59 @@ class MongodBinary:
 
         raise OSError("Your platform is unsupported.")  # pragma: no cover
 
+    async def download_and_unpack(self) -> Path:
+        """Return path to downloaded and unpacked mongod binary."""
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.url) as resp:
+                with tempfile.TemporaryFile(mode='w+b') as binary_file:
+                    # Read by chunks to avoid big RAM consumption
+                    while True:
+                        # read by 100 bytes
+                        chunk = await resp.content.read(100)
+                        if not chunk:
+                            break
+                        binary_file.write(chunk)
+                    binary_file.flush()
+                    binary_file.seek(0)
+                    self.__unpack(binary_file)
+                    return self.path
+
+    def __unpack(self, binary_file: IO[bytes]) -> None:
+        """Unpack mongod binary from zip or tar."""
+        if self.url.endswith('.tgz'):
+            with tarfile.open(fileobj=binary_file) as archive_tar:
+                file_in_archive = archive_tar.extractfile(
+                    f'mongodb-{self.current_platform}-{self.MONGO_VERSION}/bin/mongod')
+                if file_in_archive is None:  # pragma: no cover
+                    raise FileNotFoundError
+                file_outside = self.path.open(mode="wb")
+                with file_in_archive, file_outside:
+                    shutil.copyfileobj(file_in_archive, file_outside)
+                self.path.chmod(0o700)
+            assert self.path.exists(), "Unsuccessful mongod binary extraction"
+            return
+        if self.url.endswith('.zip') and self.current_platform == 'windows-x86_64':
+            with ZipFile(file=binary_file, mode='r') as archive_zip:
+                # pylint: disable=consider-using-with
+                file_in_archive = archive_zip.open(
+                    f'mongodb-win32-x86_64-windows-{self.MONGO_VERSION}/bin/mongod.exe')
+                if file_in_archive is None:  # pragma: no cover
+                    raise FileNotFoundError
+                file_outside = self.path.open(mode="wb")
+                with file_in_archive, file_outside:
+                    shutil.copyfileobj(file_in_archive, file_outside)
+                self.path.chmod(0o700)
+            assert self.path.exists(), "Unsuccessful mongod binary extraction"
+            return
+        raise Exception("Unsupported archive format.")  # pragma: no cover
+
     @staticmethod
     def __select_ubuntu_version() -> str:
         if bool(distro.major_version()) and int(distro.major_version()) < 16:
             raise OSError("Your Ubuntu version is too old. Upgrade at least to 16.")
 
         if distro.version() == '16.04':
-            warnings.warn("Your OS support was NOT properly tested.")
+            MongodBinary.warn_untested_os()
             return 'ubuntu1604'
         if distro.version() == '18.04':
             return 'ubuntu1804'
@@ -128,11 +135,16 @@ class MongodBinary:
             raise OSError("Your Debian version is too old. Upgrade at least to 9.")
 
         if distro.version() == '9.2':
-            warnings.warn("Your OS support was NOT properly tested.")
+            MongodBinary.warn_untested_os()
             return 'debian92'
         if distro.version() == '10.0':
-            warnings.warn("Your OS support was NOT properly tested.")
+            MongodBinary.warn_untested_os()
             return 'debian10'
 
         warnings.warn("Can't detect your Debian version. Fallback to 9.2.")
         return 'debian92'
+
+    @staticmethod
+    def warn_untested_os() -> None:
+        """Throws a warning about your OS not beeing tested by contributors."""
+        warnings.warn("Your OS support was NOT properly tested.")
