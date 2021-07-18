@@ -4,9 +4,9 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from pytest import MonkeyPatch, Testdir, raises
+from pytest import Testdir
 
-from pytest_motor.plugin import _event_loop, _mongo_ver
+from pytest_motor.plugin import _event_loop
 
 # pylint: disable=redefined-outer-name
 
@@ -74,16 +74,3 @@ def test_integration_clients_independence(testdir: Testdir, read_conftest: str) 
     testdir.makeconftest(read_conftest)
     testdir.makepyfile(test_files['independence_tests.py'].read_text())
     testdir.runpytest().assert_outcomes(passed=2)
-
-
-def test_mongo_ver(monkeypatch: MonkeyPatch) -> None:
-    """Test mongo version based on platform system."""
-    monkeypatch.setattr("platform.system", lambda: "Darwin")
-    assert _mongo_ver() == ("osx", "mongodb-macos-x86_64-4.4.6")
-
-    monkeypatch.setattr("platform.system", lambda: "Linux")
-    assert _mongo_ver() == ("linux", "mongodb-linux-x86_64-ubuntu1804-4.4.6")
-
-    monkeypatch.setattr("platform.system", lambda: "Windows")
-    with raises(Exception):
-        _mongo_ver()
