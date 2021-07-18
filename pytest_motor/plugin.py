@@ -1,18 +1,18 @@
 """A pytest plugin which helps test applications using Motor."""
 import asyncio
-import platform
 import secrets
 import shutil
 import socket
-import tarfile
-import tempfile
 from pathlib import Path
-from typing import AsyncIterator, Iterator, List, Tuple
+from typing import AsyncIterator, Iterator, List
 
-import aiohttp
 import pytest
 from _pytest.config import Config as PytestConfig
 from motor.motor_asyncio import AsyncIOMotorClient
+
+from .mongod_binary import MongodBinary
+
+# pylint: disable=redefined-outer-name
 
 
 def _event_loop() -> Iterator[asyncio.AbstractEventLoop]:
@@ -50,32 +50,13 @@ async def root_directory(pytestconfig: PytestConfig) -> Path:
 
 
 @pytest.fixture(scope='session')
-async def mongod_binary(root_directory: Path) -> Path:  # pylint: disable=redefined-outer-name
+async def mongod_binary(root_directory: Path) -> Path:
     """Return a path to a mongod binary."""
-    destination: Path = root_directory.joinpath('.mongod')
-    os_ver, mongo_ver = _mongo_ver()
-    mongod_binary_relative_path = f'{mongo_ver}/bin/mongod'
-    mongod_binary_path = destination.joinpath(mongod_binary_relative_path)
-
-    if not mongod_binary_path.exists():
-        download_url = f'https://fastdl.mongodb.org/{os_ver}/{mongo_ver}.tgz'
-        async with aiohttp.ClientSession() as session:
-            async with session.get(download_url) as resp:
-                with tempfile.TemporaryFile(mode='w+b') as binary_file:
-                    # Read by chunks to avoid big RAM consumption
-                    while True:
-                        # read by 100 bytes
-                        chunk = await resp.content.read(100)
-                        if not chunk:
-                            break
-                        binary_file.write(chunk)
-                    binary_file.flush()
-                    binary_file.seek(0)
-                    # Extract tar
-                    with tarfile.open(fileobj=binary_file) as tar:
-                        tar.extract(member=mongod_binary_relative_path, path=destination)
-
-    return mongod_binary_path
+    destination: Path = root_directory / '.mongod'
+    binary = MongodBinary(destination=destination)
+    if not binary.path.exists():
+        await binary.download_and_unpack()
+    return binary.path
 
 
 @pytest.fixture(scope='function')
@@ -89,7 +70,6 @@ def new_port() -> int:
 
 
 @pytest.fixture(scope='function')
-# pylint: disable=redefined-outer-name
 async def databases_directory(root_directory: Path) -> AsyncIterator[Path]:
     """Yield a directory for mongod to store data."""
     databases_directory = root_directory.joinpath('.mongo_databases')
@@ -99,7 +79,6 @@ async def databases_directory(root_directory: Path) -> AsyncIterator[Path]:
 
 
 @pytest.fixture(scope='function')
-# pylint: disable=redefined-outer-name
 async def database_path(databases_directory: Path) -> AsyncIterator[Path]:
     """Yield a database path for a mongod process to store data."""
     name: str = secrets.token_hex(12)
@@ -112,7 +91,6 @@ async def database_path(databases_directory: Path) -> AsyncIterator[Path]:
 
 
 @pytest.fixture(scope='function')
-# pylint: disable=redefined-outer-name
 async def mongod_socket(new_port: int, database_path: Path,
                         mongod_binary: Path) -> AsyncIterator[str]:
     """Yield a mongod."""
@@ -138,7 +116,6 @@ async def mongod_socket(new_port: int, database_path: Path,
 
 
 @pytest.fixture(scope='function')
-# pylint: disable=redefined-outer-name
 async def motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
     """Yield a Motor client."""
     connection_string = f'mongodb://{mongod_socket}'
@@ -149,15 +126,3 @@ async def motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
     yield motor_client_
 
     motor_client_.close()
-
-
-def _mongo_ver() -> Tuple[str, str]:
-    """Return mongo version based on platform system."""
-    if platform.system() == 'Linux':
-        mongo_exec = "linux", 'mongodb-linux-x86_64-ubuntu1804-4.4.6'
-    elif platform.system() == 'Darwin':
-        mongo_exec = "osx", 'mongodb-macos-x86_64-4.4.6'
-    else:
-        raise Exception("Unsupported platform")
-
-    return mongo_exec
