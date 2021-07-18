@@ -122,7 +122,7 @@ def test_unpack(monkeypatch: MonkeyPatch) -> None:
     assert binary_test.url.endswith('.tgz')
     mongod_path = directory / "mongod"
     with open(MONGODB_MACOS_TAR, 'rb') as test_file:
-        binary_test._MongodBinary__unpack(test_file)
+        binary_test._MongodBinary__unpack(test_file)  # type: ignore[attr-defined]
     assert mongod_path.exists()
     mongod_path.unlink()
 
@@ -131,7 +131,7 @@ def test_unpack(monkeypatch: MonkeyPatch) -> None:
     assert binary_test.url.endswith('.zip')
     mongod_path = directory / "mongod.exe"
     with open(MONGODB_WINDOWS_ZIP, 'rb') as test_file:
-        binary_test._MongodBinary__unpack(test_file)
+        binary_test._MongodBinary__unpack(test_file)  # type: ignore[attr-defined]
     assert mongod_path.exists()
     mongod_path.unlink()
     # pylint: enable=protected-access

@@ -5,6 +5,7 @@ import tarfile
 import tempfile
 import warnings
 from pathlib import Path
+from typing import IO
 from zipfile import ZipFile
 
 import aiohttp
@@ -41,30 +42,35 @@ class MongodBinary:
                     self.__unpack(binary_file)
                     return self.path
 
-    def __unpack(self, binary_file: tempfile.TemporaryFile):
+    def __unpack(self, binary_file: IO[bytes]) -> None:
         """Unpack mongod binary from zip or tar."""
         # pylint: disable=consider-using-with
         if str(self.url).endswith('.tgz'):
-            with tarfile.open(fileobj=binary_file) as archive:
-                file_in_archive = archive.extractfile(
+            with tarfile.open(fileobj=binary_file) as archive_tar:
+                file_in_archive = archive_tar.extractfile(
                     f'mongodb-{self.mongo_platform()}-{self.MONGO_VERSION}/bin/mongod')
+                if file_in_archive is None:  # pragma: no cover
+                    raise FileNotFoundError
                 file_outside = self.path.open(mode="wb")
                 with file_in_archive, file_outside:
                     shutil.copyfileobj(file_in_archive, file_outside)
                 self.path.chmod(0o777)
             assert self.path.exists(), "Unsuccessful mongod binary extraction"
-        elif str(self.url).endswith('.zip') and self.mongo_platform() == 'windows-x86_64':
-            with ZipFile(file=binary_file) as archive:
-                file_in_archive = archive.open(
+            return
+        if str(self.url).endswith('.zip') and self.mongo_platform() == 'windows-x86_64':
+            with ZipFile(file=binary_file, mode='r') as archive_zip:
+                file_in_archive = archive_zip.open(
                     f'mongodb-win32-x86_64-windows-{self.MONGO_VERSION}/bin/mongod.exe')
+                if file_in_archive is None:  # pragma: no cover
+                    raise FileNotFoundError
                 file_outside = self.path.open(mode="wb")
                 with file_in_archive, file_outside:
                     shutil.copyfileobj(file_in_archive, file_outside)
                 self.path.chmod(0o777)
             assert self.path.exists(), "Unsuccessful mongod binary extraction"
+            return
         # pylint: enable=consider-using-with
-        else:
-            raise Exception("Unsupported archive format.")  # pragma: no cover
+        raise Exception("Unsupported archive format.")  # pragma: no cover
 
     @staticmethod
     def mongo_running_os() -> str:
