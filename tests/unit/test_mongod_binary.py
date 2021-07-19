@@ -58,11 +58,11 @@ def mongodb_archive_macos() -> Iterator[IO]:
 def test_mongo_platform(monkeypatch: MonkeyPatch, platform_name: str, distro_name: str,
                         distro_version: str, result: str) -> None:
     """Test mongodb platform selection."""
-
     monkeypatch.setattr("platform.system", lambda: platform_name)
     monkeypatch.setattr("distro.id", lambda: distro_name)
     monkeypatch.setattr("distro.version", lambda: distro_version)
     monkeypatch.setattr("distro.major_version", lambda: distro_version.split('.')[0])
+
     assert MongodBinary(Path(tempfile.gettempdir())).current_platform == result
 
 
@@ -80,6 +80,7 @@ def test_mongod_url(monkeypatch: MonkeyPatch, platform_name: str, distro_name: s
     monkeypatch.setattr("distro.id", lambda: distro_name)
     monkeypatch.setattr("distro.version", lambda: distro_version)
     monkeypatch.setattr("distro.major_version", lambda: distro_version.split('.')[0])
+
     assert MongodBinary(Path(tempfile.gettempdir())).url == true_url
 
 
@@ -91,13 +92,14 @@ def test_mongod_url(monkeypatch: MonkeyPatch, platform_name: str, distro_name: s
 # yapf: enable # pylint: enable=line-too-long
 def test_unpack(monkeypatch: MonkeyPatch, platform_name: str, archive: IO[bytes]) -> None:
     """Test unpacking mechanism based on archive format."""
-
     directory: Path = Path(tempfile.gettempdir())
-
     monkeypatch.setattr("platform.system", lambda: platform_name)
     binary_test = MongodBinary(directory)
     mongod_path = directory / binary_test.binary_name
+
     # pylint: disable=protected-access
     binary_test._MongodBinary__unpack(archive)  # type: ignore[attr-defined]
+
     assert mongod_path.exists()
+
     mongod_path.unlink()
