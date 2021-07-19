@@ -9,8 +9,8 @@ on:
       - 'master'
 
 jobs:
-  test:
-    name: Test
+  unit-test:
+    name: Unit tests
     runs-on: ubuntu-latest
 
     steps:
@@ -27,14 +27,39 @@ jobs:
         cache-name: pip-packages-cache
       with:
         path: ~/.cache/pip
-        key: ${{ env.cache-name }}-test-${{ hashFiles('requirements/frozen/frozen_test_requirements.txt') }}
+        key: ${{ env.cache-name }}-unit-test-${{ hashFiles('requirements/frozen/frozen_test_requirements.txt') }}
         restore-keys: |
-          ${{ env.cache-name }}-test-
+          ${{ env.cache-name }}-unit-test-
           ${{ env.cache-name }}-
 
-    - name: Test with pytest
-      run: |
-        ./scripts/coverage.sh
+    - name: Run unit tests with pytest and check coverage
+      run: ./scripts/coverage.sh
+
+  integration-test:
+    name: Integration tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
+    - name: Cache pip packages
+      uses: actions/cache@v2
+      env:
+        cache-name: pip-packages-cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ env.cache-name }}-integration-test-${{ hashFiles('requirements/frozen/frozen_test_requirements.txt') }}
+        restore-keys: |
+          ${{ env.cache-name }}-integration-test-
+          ${{ env.cache-name }}-
+
+    - name: Run integration tests with pytest
+      run: ./scripts/integration.sh
 
   lint:
     name: Lint
