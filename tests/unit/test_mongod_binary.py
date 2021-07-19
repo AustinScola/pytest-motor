@@ -8,8 +8,11 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from pytest import MonkeyPatch, fixture, mark, param
 from pytest_lazyfixture import lazy_fixture
+import pytest
 
 from pytest_motor.mongod_binary import MongodBinary
+
+pytestmark = pytest.mark.unit
 
 
 @fixture(scope='session')
