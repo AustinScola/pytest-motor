@@ -79,6 +79,7 @@ def test_integration_clients_independence(testdir: Testdir, read_conftest: str) 
 
 
 def test_integration_parametrized_test(testdir: Testdir, read_conftest: str) -> None:
+    # pylint: disable=redefined-outer-name
     """Test pytest_motor.plugin.motor_client."""
     assert 'paramatrized_test.py' in test_files.keys()
     testdir.makeconftest(read_conftest)
