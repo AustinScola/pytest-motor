@@ -9,6 +9,7 @@ from pytest_motor.plugin import _event_loop
 
 pytestmark = pytest.mark.unit
 
+
 def test_event_loop() -> None:
     """Test pytest_motor.plugin._event_loop."""
     mock_close = Mock(AbstractEventLoop.close)

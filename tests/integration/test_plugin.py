@@ -17,6 +17,7 @@ test_files = {
 
 pytestmark = pytest.mark.integration
 
+
 @pytest.fixture
 def read_conftest() -> str:
     """Reads conftest.py"""

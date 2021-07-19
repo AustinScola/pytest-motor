@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import IO, Iterator
 from zipfile import ZIP_DEFLATED, ZipFile
 
+import pytest
 from pytest import MonkeyPatch, fixture, mark, param
 from pytest_lazyfixture import lazy_fixture
-import pytest
 
 from pytest_motor.mongod_binary import MongodBinary
 
