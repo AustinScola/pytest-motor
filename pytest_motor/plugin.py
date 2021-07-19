@@ -1,7 +1,5 @@
 """A pytest plugin which helps test applications using Motor."""
 import asyncio
-import secrets
-import shutil
 import socket
 from pathlib import Path
 from typing import AsyncIterator, Iterator, List
@@ -55,27 +53,14 @@ def new_port() -> int:
     return port
 
 
-@pytest.fixture(scope='function')
-async def databases_directory(root_directory: Path) -> AsyncIterator[Path]:
-    # pylint: disable=redefined-outer-name
-    """Yield a directory for mongod to store data."""
-    databases_directory = root_directory.joinpath('.mongo_databases')
-    databases_directory.mkdir(exist_ok=True)
-
-    yield databases_directory
-
-
-@pytest.fixture(scope='function')
-async def database_path(databases_directory: Path) -> AsyncIterator[Path]:
-    # pylint: disable=redefined-outer-name
+async def _database_path(tmp_path: Path) -> AsyncIterator[Path]:
     """Yield a database path for a mongod process to store data."""
-    name: str = secrets.token_hex(12)
-    database_path: Path = databases_directory.joinpath(name)
-    database_path.mkdir()
+    yield tmp_path
 
-    yield database_path
 
-    shutil.rmtree(database_path, ignore_errors=True)
+database_path = pytest.fixture(fixture_function=_database_path,
+                               scope='function',
+                               name="database_path")
 
 
 @pytest.fixture(scope='function')

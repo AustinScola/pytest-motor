@@ -1,10 +1,11 @@
 """Test pytest_motor.plugin."""
 from asyncio import AbstractEventLoop
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
 
-from pytest_motor.plugin import _event_loop
+from pytest_motor.plugin import _database_path, _event_loop
 
 pytestmark = pytest.mark.unit
 
@@ -24,3 +25,15 @@ def test_event_loop() -> None:
         next(loop_iterator)
 
     mock_close.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_database_path(tmp_path: Path) -> None:
+    """Test pytest_motor.plugin._database_path."""
+    database_path_context = _database_path(tmp_path)
+
+    database_path = await database_path_context.__anext__()
+    assert database_path.exists()
+
+    with pytest.raises(StopAsyncIteration):
+        await database_path_context.__anext__()
