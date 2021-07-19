@@ -1,14 +1,10 @@
-"""Test pytest_motor.plugin."""
-from asyncio import AbstractEventLoop
+"""Integration tests for the plugin."""
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 from pytest import Testdir
 
-from pytest_motor.plugin import _event_loop
-
-test_files_directory = Path(__file__).parent.parent / 'test_data' / 'files'
+test_files_directory = Path(__file__).parent.parent.parent / 'test_data' / 'files'
 # yapf: disable
 test_files = {
     path_to_file.name: path_to_file
@@ -17,29 +13,14 @@ test_files = {
 }
 # yapf: enable
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def read_conftest() -> str:
     """Reads conftest.py"""
-    conftest_file = Path(__file__).parent / 'conftest.py'
+    conftest_file = Path(__file__).parent.parent / 'conftest.py'
     return conftest_file.read_text()
-
-
-def test_event_loop() -> None:
-    """Test pytest_motor.plugin._event_loop."""
-    mock_close = Mock(AbstractEventLoop.close)
-    mock_event_loop = Mock(AbstractEventLoop, close=mock_close)
-    with patch('asyncio.get_event_loop', return_value=mock_event_loop):
-        loop_iterator = _event_loop()
-
-        loop = next(loop_iterator)
-
-    assert loop is mock_event_loop
-
-    with pytest.raises(StopIteration):
-        next(loop_iterator)
-
-    mock_close.assert_called_once()
 
 
 def test_new_port(testdir: Testdir, read_conftest: str) -> None:
