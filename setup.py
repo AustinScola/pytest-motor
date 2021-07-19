@@ -36,5 +36,5 @@ setuptools.setup(
         'Typing :: Typed',
     ],
     python_requires='>=3.6',
-    install_requires=['pytest', 'motor', 'aiohttp', 'distro'],
+    install_requires=['pytest', 'motor', 'aiohttp[speedups]', 'distro'],
 )
