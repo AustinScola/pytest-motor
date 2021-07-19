@@ -1,6 +1,5 @@
 """Test pytest_motor.plugin."""
 from asyncio import AbstractEventLoop
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
