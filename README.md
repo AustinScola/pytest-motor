@@ -10,6 +10,16 @@
 
 A [pytest][1] plugin for [Motor][2], the non-blocking MongoDB driver.
 
+## Installation
+
+To install pytest-motor, simply:
+
+``` bash
+pip install pytest-motor
+```
+
+This is enough for pytest to pick up pytest-motor.
+
 ## Example
 
 ``` Python3
