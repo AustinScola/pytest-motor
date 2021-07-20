@@ -1,5 +1,5 @@
 motor==2.4.0
 pytest==6.2.4
 pytest-asyncio==0.15.1 # Needed for async pytest fixtures
-aiohttp==3.7.4.post0
+aiohttp[speedups]==3.7.4.post0
 distro==1.5.0
