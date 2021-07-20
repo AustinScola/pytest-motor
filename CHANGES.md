@@ -1,11 +1,9 @@
 # Change log
 
-## v0.2.1
+## v0.3.0
 
-- Add Windows and Debian support. Add Ubuntu 16.04 and 20.04 support as well.
-- Add separate class for mongod binary.
-- Separate unit and integration tests.
-- Combined all the configs in pyproject.toml.
+- Add support for Windows, Debian, Ubuntu 16.04, and Ubuntu 20.04.
+- Improve mongod binary handling.
 - Improve the readme.
   - Add section about how `pytest-motor` works.
   - Add section about installation.
