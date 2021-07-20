@@ -3,6 +3,6 @@
 !/venvs/.gitkeep
 /dist/*
 !/dist/.gitkeep
-/.coverage
+/*coverage*
 /.mongod
 /.mongo_databases

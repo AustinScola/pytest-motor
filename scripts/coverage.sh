@@ -10,4 +10,4 @@ cd "${REPO_ROOT}"
 source "${REPO_ROOT}/scripts/library/venv.sh"
 use_venv "coverage" frozen_coverage_requirements.txt
 
-python3 -m pytest -m unit --cov=pytest_motor --cov-report  term-missing
+python3 -m pytest -m unit --cov-report term-missing --cov-report xml --cov=pytest_motor
