@@ -27,11 +27,11 @@ async def test_using_motor_client(motor_client: AsyncIOMotorClient) -> None:
 
 ## How it works
 
-1. Every pytest session you start, `pytest-motor` checks if you have mongod binary at pytest rootpath/.mongod.
+1. Every pytest session you start, `pytest-motor` checks if you have the mongod binary at pytest rootpath/.mongod.
 
 2. If you don't have one, plugin will download and unpack the binary automatically. This, of course, will slow down the first launch, but subsequent runs will be significantly faster.
 
-3. Every function you run will have separate database connection. MongoDB itself remains clean.
+3. Every function you run will have a separate database connection. MongoDB itself remains clean.
 
 ## Limitations
 
