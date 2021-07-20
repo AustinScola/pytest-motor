@@ -1,5 +1,12 @@
 # Change log
 
+## v0.3.0
+- Add support for Windows, Debian, Ubuntu 16.04, and Ubuntu 20.04.
+- Improve mongod binary handling.
+- Improve the readme.
+  - Add section about how `pytest-motor` works.
+  - Add section about installation.
+
 ## v0.2.0
 - Add MacOS support.
 - Change the mongod binary download to be async.
