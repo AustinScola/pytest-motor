@@ -6,7 +6,9 @@
 - Add separate class for mongod binary.
 - Separate unit and integration tests.
 - Combined all the configs in pyproject.toml.
-- Add "how it works" and "installation" sections to readme.
+- Improve the readme.
+  - Add section about how `pytest-motor` works.
+  - Add section about installation.
 
 ## v0.2.0
 
