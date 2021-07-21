@@ -12,17 +12,15 @@ A [pytest][1] plugin for [Motor][2], the non-blocking MongoDB driver.
 
 ## Installation
 
-To install pytest-motor, simply:
+To install `pytest-motor`, run:
 
-``` bash
+```bash
 pip install pytest-motor
 ```
 
-This is enough for pytest to pick up pytest-motor.
-
 ## Example
 
-``` Python3
+```python3
 from motor.motor_asyncio import AsyncIOMotorClient
 import pytest
 
@@ -35,27 +33,22 @@ async def test_using_motor_client(motor_client: AsyncIOMotorClient) -> None:
 
 ## How it works
 
-1. Every pytest session you start, `pytest-motor` checks if you have the mongod binary at pytest rootpath/.mongod.
+When a test session runs, `pytest-motor` checks that the mongod binary is present in the
+`.mongod` subdirectory of the pytest root path. If it is not preset, it will be downloaded. This
+means that the first run make take some time. Subsequent runs will be faster.
 
-2. If you don't have one, plugin will download and unpack the binary automatically. This, of course, will slow down the first launch, but subsequent runs will be significantly faster.
-
-3. Every function you run will have a separate database connection. MongoDB itself remains clean.
+Each test function uses a new `motor_client` and database. (This may change in the future.)
 
 ## Limitations
 
 `pytest-motor` currently supports:
 
-- Ubuntu
-  - 16.04*
-  - 18.04
-  - 20.04
-- Debian
-  - 9.2*
-  - 10.0*
-- macOS
+- Ubuntu 16.04*, 18.04, and 20.04
+- Debian 9.2* and 10.0*
+- MacOS
 - Windows
 
-*none of the contributors use this version, so it is NOT properly tested.
+*NOT tested.
 
 If you would like support for another system, please [make a GitHub Issue][3]. Contributions are
 welcome!
