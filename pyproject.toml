@@ -43,3 +43,42 @@ ignore_missing_imports = true
 quiet = true
 line_length = 100
 skip_glob = ["venvs", "build"]
+
+[tool.poetry]
+name = "pytest-motor"
+version = "0.3.0"
+repository = "https://github.com/AustinScola/pytest-motor"
+readme = "README.md"
+description = "A pytest plugin for motor, the non-blocking MongoDB driver."
+authors = ["Austin Scola <austinscola@gmail.com>"]
+license = "MIT"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Operating System :: OS Independent",
+    "Framework :: Pytest",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+motor = "^2.4.0"
+pytest = "^6.2.4"
+pytest-asyncio = "^0.15.1"
+aiohttp = {extras = ["speedups"], version = "^3.7.4"}
+distro = "^1.5.0"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.9.4"
+mypy = "^0.910"
+isort = "^5.9.2"
+yapf = "^0.31.0"
+toml = "^0.10.2"
+pytest = "^6.2.4"
+pytest-cov = "^2.12.1"
+pytest-asyncio = "^0.15.1"
+pytest-lazy-fixture = "^0.6.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

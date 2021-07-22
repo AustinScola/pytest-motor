@@ -1,8 +1,9 @@
 *.pyc
-/venvs/*
-!/venvs/.gitkeep
+/.venv/*
+!/.venv/.gitkeep
 /dist/*
 !/dist/.gitkeep
 /*coverage*
 /.mongod
 /.mongo_databases
+/.mypy_cache
