@@ -1,16 +1,13 @@
 name: Publish
 
-on: workflow_dispatch
+on:
+  release:
+    types:
+      - published
 
 jobs:
   publish:
     name: Publish distributions to PyPI
-    environment:
-      name: PyPI
-      url: https://pypi.org/project/pytest-motor/
-    env:
-      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-
     runs-on: ubuntu-latest
 
     steps:
@@ -21,21 +18,22 @@ jobs:
       with:
         python-version: 3.6
 
-    - name: Cache pip packages
-      uses: actions/cache@v2
-      env:
-        cache-name: pip-packages-cache
-      with:
-        path: ~/.cache/pip
-        key: ${{ env.cache-name }}-publish-${{ hashFiles('requirements/frozen/frozen_test_requirements.txt') }}
-        restore-keys: |
-          ${{ env.cache-name }}-publish-
-          ${{ env.cache-name }}-
+    - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
 
-    - name: Build a Python source distrubution and wheel
-      run: |
-        ./scripts/build.sh
+    - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-publish-${{ hashFiles('**/poetry.lock') }}
+    
+    - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-dev --no-interaction --no-root
 
-    - name: Publish the distributions
-      run: |
-        ./scripts/publish.sh
+    - name: Publish
+        run: poetry publish --build --no-interaction -u __token__ -p ${{ secrets.PYPI_TOKEN }}
