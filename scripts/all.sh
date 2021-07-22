@@ -2,10 +2,6 @@
 
 set -eu
 
-HERE="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-
-cd "${HERE}"
-
 ./format.sh
 
 ./lint.sh
