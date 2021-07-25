@@ -22,6 +22,7 @@ SecretStorage==3.3.1
 six==1.16.0
 tqdm==4.61.2
 twine==3.4.1
+typing-extensions==3.10.0.0
 urllib3==1.26.6
 webencodings==0.5.1
 zipp==3.5.0
