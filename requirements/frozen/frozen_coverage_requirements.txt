@@ -9,6 +9,8 @@ chardet==4.0.0
 coverage==5.5
 distro==1.5.0
 idna==3.2
+idna-ssl==1.1.0
+importlib-metadata==4.6.1
 iniconfig==1.1.1
 motor==2.4.0
 multidict==5.1.0
@@ -26,3 +28,4 @@ pytest-lazy-fixture==0.6.3
 toml==0.10.2
 typing-extensions==3.10.0.0
 yarl==1.6.3
+zipp==3.5.0
