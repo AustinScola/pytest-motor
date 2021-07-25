@@ -1,13 +1,24 @@
 """Test pytest_motor.plugin."""
 from asyncio import AbstractEventLoop
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
+from _pytest.config import Config as PytestConfig
 
-from pytest_motor.plugin import _database_path, _event_loop
+from pytest_motor.plugin import _database_path, _event_loop, _root_directory
 
 pytestmark = pytest.mark.unit
+
+
+@pytest.mark.asyncio
+async def test_root_directory() -> None:
+    """Test the pytest root directory fixture."""
+    mock_root_directory = MagicMock()
+    mock_pytestconfig = MagicMock(PytestConfig)
+    type(mock_pytestconfig).rootpath = PropertyMock(return_value=mock_root_directory)
+
+    assert await _root_directory(mock_pytestconfig) == mock_root_directory
 
 
 def test_event_loop() -> None:

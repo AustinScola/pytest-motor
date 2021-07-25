@@ -1,5 +1,5 @@
 [tool.coverage]
-fail_under = 78
+fail_under = 79
 
 [tool.yapf]
 column_limit = 100
