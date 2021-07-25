@@ -26,10 +26,14 @@ def _event_loop() -> Iterator[asyncio.AbstractEventLoop]:
 event_loop = pytest.fixture(fixture_function=_event_loop, scope='session', name="event_loop")
 
 
-@pytest.fixture(scope='session')
-async def root_directory(pytestconfig: PytestConfig) -> Path:
+async def _root_directory(pytestconfig: PytestConfig) -> Path:
     """Return the root path of pytest."""
     return pytestconfig.rootpath
+
+
+root_directory = pytest.fixture(fixture_function=_root_directory,
+                                scope='session',
+                                name='root_directory')
 
 
 @pytest.fixture(scope='session')
