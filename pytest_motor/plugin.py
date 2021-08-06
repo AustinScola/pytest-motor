@@ -64,7 +64,7 @@ async def _database_path(tmp_path: Path) -> AsyncIterator[Path]:
 
 database_path = pytest.fixture(fixture_function=_database_path,
                                scope='function',
-                               name="database_path")
+                               name='database_path')
 
 
 @pytest.fixture(scope='function')
