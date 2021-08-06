@@ -52,7 +52,7 @@ def new_port() -> int:
     """Return an unused port for mongod to run on."""
     port: int = 27017
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as opened_socket:
-        opened_socket.bind(("127.0.0.1", 0))  # system will automaticly assign port
+        opened_socket.bind(('127.0.0.1', 0))  # system will automaticly assign port
         port = opened_socket.getsockname()[1]
     return port
 
