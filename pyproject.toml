@@ -4,6 +4,9 @@ fail_under = 79
 [tool.yapf]
 column_limit = 100
 
+[tool.yapfignore]
+ignore_patterns = ["venvs", "build"]
+
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
 testpaths = ["tests"]
