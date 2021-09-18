@@ -36,5 +36,11 @@ setuptools.setup(
         'Typing :: Typed',
     ],
     python_requires='>=3.6',
-    install_requires=['pytest', 'motor', 'aiohttp[speedups]', 'distro'],
+    install_requires=['pytest>=5.0', 'motor>=2.0', 'aiohttp[speedups]', 'distro'],
+    extras_require={
+        "dev": [
+            "pre-commit", "tox", "pytest-cov", "pytest-asyncio", "pytest-lazy-fixture", "pylint",
+            "yapf[toml]", "isort", "mypy"
+        ],
+    },
 )
