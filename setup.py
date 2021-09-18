@@ -14,6 +14,12 @@ _VERSION = _VERSION_FILE.read_text()
 
 _PACKAGES: List[str] = setuptools.find_packages(where=_HERE, include=['pytest_motor*'])
 
+_PACKAGE_REQUIREMENTS: List[str] = ['pytest>=5.0', 'motor>=2.0', 'aiohttp[speedups]', 'distro']
+_TEST_REQUIREMENTS: List[str] = [
+    "tox>=3.24.0", "pytest-cov", "pytest-asyncio", "pytest-lazy-fixture"
+]
+_DEV_REQUIREMENTS: List[str] = ["pre-commit", "pylint", "yapf[toml]", "isort", "mypy"]
+
 setuptools.setup(
     name='pytest-motor',
     version=_VERSION,
@@ -36,11 +42,9 @@ setuptools.setup(
         'Typing :: Typed',
     ],
     python_requires='>=3.6',
-    install_requires=['pytest>=5.0', 'motor>=2.0', 'aiohttp[speedups]', 'distro'],
+    install_requires=_PACKAGE_REQUIREMENTS,
     extras_require={
-        "dev": [
-            "pre-commit", "tox", "pytest-cov", "pytest-asyncio", "pytest-lazy-fixture", "pylint",
-            "yapf[toml]", "isort", "mypy"
-        ],
+        "dev": _DEV_REQUIREMENTS + _TEST_REQUIREMENTS,
+        "test": _TEST_REQUIREMENTS,
     },
 )
