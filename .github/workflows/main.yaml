@@ -10,12 +10,13 @@ on:
     branches:
       - 'master'
 
+env:
+  PYTEST_ADDOPTS: "--color=yes"
+
 jobs:
   tests:
     name: Unit Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-20.04
-    env:
-      PYTEST_ADDOPTS: "--color=yes"
 
     strategy:
       matrix:
@@ -52,8 +53,6 @@ jobs:
   integration-tests:
     name: Integration Tests (Python 3.6 ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    env:
-      PYTEST_ADDOPTS: "--color=yes"
 
     strategy:
       matrix:
