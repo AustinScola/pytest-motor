@@ -5,7 +5,7 @@ fail_under = 79
 column_limit = 100
 
 [tool.yapfignore]
-ignore_patterns = ["venvs", "build"]
+ignore_patterns = [".venv"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
@@ -26,7 +26,7 @@ disable = ["duplicate-code"]
 python_version = "3.6"
 warn_return_any = true
 warn_unused_configs = true
-exclude = "venvs/"
+exclude = ".venv/"
 disallow_untyped_defs = true
 no_implicit_optional = true
 warn_unused_ignores = true
@@ -43,6 +43,10 @@ module = [
 ignore_missing_imports = true
 
 [tool.isort]
+src_paths = ["pytest_motor", "tests", "test_data"]
 quiet = true
 line_length = 100
-skip_glob = ["venvs", "build"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
