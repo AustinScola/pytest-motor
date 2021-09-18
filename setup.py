@@ -1,10 +1,11 @@
 """A build script using setuptools for the pytest motor package."""
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 _PACKAGE_REQUIREMENTS = ['pytest>=5.0', 'motor>=2.0', 'aiohttp[speedups]', 'distro']
 _TEST_REQUIREMENTS = ["tox>=3.24.0", "pytest-cov", "pytest-asyncio", "pytest-lazy-fixture"]
 _DEV_REQUIREMENTS = ["pre-commit", "pylint", "yapf", "isort", "mypy"]
 
+# pylint: disable=consider-using-with
 setup(name='pytest-motor',
       version=open("VERSION.txt", encoding="utf-8").read(),
       author='Austin Scola',

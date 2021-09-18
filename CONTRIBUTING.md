@@ -1,4 +1,4 @@
-# Contributing to `pytest-motor` 
+# Contributing to `pytest-motor`
 
 Hello friend! Here are some guidelines on how to contribute to `pytest-motor`.
 
