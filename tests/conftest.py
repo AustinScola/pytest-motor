@@ -1,3 +1,3 @@
 """Pytest configuration."""
 
-pytest_plugins = ['pytester', 'pytest_asyncio', 'pytest_motor.plugin']
+pytest_plugins = ['pytester', 'pytest_asyncio']

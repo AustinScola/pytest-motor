@@ -1,35 +1,20 @@
 """A build script using setuptools for the pytest motor package."""
-import pathlib
-from typing import List
-
 import setuptools
 
-_HERE = pathlib.Path(__file__).parent
-
-_README = _HERE / 'README.md'
-_LONG_DESCRIPTION = _README.read_text()
-
-_VERSION_FILE = _HERE / 'VERSION.txt'
-_VERSION = _VERSION_FILE.read_text()
-
-_PACKAGES: List[str] = setuptools.find_packages(where=_HERE, include=['pytest_motor*'])
-
-_PACKAGE_REQUIREMENTS: List[str] = ['pytest>=5.0', 'motor>=2.0', 'aiohttp[speedups]', 'distro']
-_TEST_REQUIREMENTS: List[str] = [
-    "tox>=3.24.0", "pytest-cov", "pytest-asyncio", "pytest-lazy-fixture"
-]
-_DEV_REQUIREMENTS: List[str] = ["pre-commit", "pylint", "yapf[toml]", "isort", "mypy"]
+_PACKAGE_REQUIREMENTS = ['pytest>=5.0', 'motor>=2.0', 'aiohttp[speedups]', 'distro']
+_TEST_REQUIREMENTS = ["tox>=3.24.0", "pytest-cov", "pytest-asyncio", "pytest-lazy-fixture"]
+_DEV_REQUIREMENTS = ["pre-commit", "pylint", "yapf[toml]", "isort", "mypy"]
 
 setuptools.setup(
     name='pytest-motor',
-    version=_VERSION,
+    version=open("VERSION.txt", encoding="utf-8").read(),
     author='Austin Scola',
     author_email='austinscola@gmail.com',
     description='A pytest plugin for motor, the non-blocking MongoDB driver.',
-    long_description=_LONG_DESCRIPTION,
+    long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type='text/markdown',
     url='https://github.com/AustinScola/pytest-motor',
-    packages=_PACKAGES,
+    packages=setuptools.find_packages(where="pytest_motor"),
     package_data={'pytest_motor': ['py.typed']},
     entry_points={'pytest11': ['pytest_motor = pytest_motor.plugin']},
     classifiers=[
@@ -46,5 +31,5 @@ setuptools.setup(
     extras_require={
         "dev": _DEV_REQUIREMENTS + _TEST_REQUIREMENTS,
         "test": _TEST_REQUIREMENTS,
-    },
+    }
 )
