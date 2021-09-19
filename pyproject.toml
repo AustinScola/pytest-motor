@@ -1,4 +1,4 @@
-[tool.coverage]
+[tool.coverage.report]
 fail_under = 79
 
 [tool.yapf]
@@ -8,7 +8,7 @@ column_limit = 100
 ignore_patterns = [".venv"]
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers"
+addopts = ["--strict-markers"]
 testpaths = ["tests"]
 markers = [
     "unit: marks tests as a unit test",

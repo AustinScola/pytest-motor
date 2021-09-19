@@ -7,7 +7,7 @@ _DEV_REQUIREMENTS = ["pre-commit", "pylint", "yapf", "isort", "mypy"]
 
 # pylint: disable=consider-using-with
 setup(name='pytest-motor',
-      version=open("VERSION.txt", encoding="utf-8").read(),
+      version=open("VERSION.txt", encoding="utf-8").readline(),
       author='Austin Scola',
       author_email='austinscola@gmail.com',
       description='A pytest plugin for motor, the non-blocking MongoDB driver.',
