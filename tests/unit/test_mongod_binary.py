@@ -84,12 +84,12 @@ def test_mongod_url(monkeypatch: MonkeyPatch, platform_name: str, distro_name: s
     assert MongodBinary(Path(tempfile.gettempdir())).url == true_url
 
 
-# yapf: disable # pylint: disable=line-too-long
+# yapf: disable
 @mark.parametrize('platform_name, archive', [
     ('Darwin', lazy_fixture('mongodb_archive_macos')),
     ('Windows', lazy_fixture('mongodb_archive_windows'))
 ])
-# yapf: enable # pylint: enable=line-too-long
+# yapf: enable
 def test_unpack(monkeypatch: MonkeyPatch, platform_name: str, archive: IO[bytes]) -> None:
     """Test unpacking mechanism based on archive format."""
     directory: Path = Path(tempfile.gettempdir())

@@ -1,8 +1,9 @@
 *.pyc
-/venvs/*
-!/venvs/.gitkeep
-/dist/*
-!/dist/.gitkeep
+/.venv/*
+!/.venv/.gitkeep
 /*coverage*
+/.mypy_cache
 /.mongod
 /.mongo_databases
+/pytest_motor.egg-info
+/.tox

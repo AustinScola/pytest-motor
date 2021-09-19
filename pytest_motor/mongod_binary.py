@@ -100,7 +100,6 @@ class MongodBinary:
             return
         if self.url.endswith('.zip') and self.current_platform == 'windows-x86_64':
             with ZipFile(file=binary_file, mode='r') as archive_zip:
-                # pylint: disable=consider-using-with
                 file_in_archive = archive_zip.open(
                     f'mongodb-win32-x86_64-windows-{self.MONGO_VERSION}/bin/mongod.exe')
                 if file_in_archive is None:  # pragma: no cover

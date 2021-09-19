@@ -1,0 +1,34 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: https://github.com/pycqa/isort
+    rev: 5.9.3
+    hooks:
+      - id: isort
+  - repo: https://github.com/google/yapf
+    rev: v0.31.0
+    hooks:
+      - id: yapf
+        additional_dependencies: [toml]
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.910
+    hooks:
+      - id: mypy
+        name: mypy-plugin
+        files: pytest_motor/
+      - id: mypy
+        name: mypy-unit-tests
+        files: tests/unit/
+      - id: mypy
+        name: mypy-integration-tests
+        files: tests/integration/
+  - repo: https://github.com/pycqa/pylint
+    rev: v2.10.2
+    hooks:
+      - id: pylint
+        args: ["--output-format=colorized", "pytest_motor", "tests", "setup.py", "--disable=E0401"]
