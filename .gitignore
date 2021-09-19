@@ -5,3 +5,5 @@
 /.mypy_cache
 /.mongod
 /.mongo_databases
+/pytest_motor.egg-info
+/.tox
