@@ -1,6 +1,7 @@
 """A pytest plugin which helps test applications using Motor."""
 import asyncio
 import socket
+import tempfile
 from pathlib import Path
 from typing import AsyncIterator, Iterator, List
 
@@ -55,7 +56,8 @@ def new_port() -> int:
 
 async def _database_path() -> AsyncIterator[Path]:
     """Yield a database path for a mongod process to store data."""
-    yield "/tmp"
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        yield tmpdirname
 
 
 database_path = pytest.fixture(fixture_function=_database_path,
