@@ -91,8 +91,8 @@ async def mongod_socket(new_port: int, database_path: Path,
         pass
 
 
-@pytest.fixture(scope='function')
-async def motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
+@pytest.fixture(scope="session")
+async def __motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
     # pylint: disable=redefined-outer-name
     """Yield a Motor client."""
     connection_string = f'mongodb://{mongod_socket}'
@@ -102,7 +102,16 @@ async def motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
 
     yield motor_client_
 
-    dbs = await motor_client_.list_database_names()
+    motor_client_.close()
+
+
+@pytest.fixture(scope='function')
+async def motor_client(__motor_client: AsyncIterator[AsyncIOMotorClient]) -> AsyncIterator[AsyncIOMotorClient]:
+    # pylint: disable=redefined-outer-name
+    """Yield a Motor client."""
+    yield __motor_client
+
+    dbs = await __motor_client.list_database_names()
 
     for db in dbs:
         if db not in ["config", "admin", "local"]:
