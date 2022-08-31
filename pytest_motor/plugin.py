@@ -115,4 +115,4 @@ async def motor_client(__motor_client: AsyncIterator[AsyncIOMotorClient]) -> Asy
 
     for db in dbs:
         if db not in ["config", "admin", "local"]:
-            await motor_client_.drop_database(db)
+            await __motor_client.drop_database(db)
