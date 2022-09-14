@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import AsyncIterator, Iterator, List
 
 import pytest
+import pytest_asyncio
 from _pytest.config import Config as PytestConfig
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -27,13 +28,13 @@ def _event_loop() -> Iterator[asyncio.AbstractEventLoop]:
 event_loop = pytest.fixture(fixture_function=_event_loop, scope='session', name="event_loop")
 
 
-@pytest.fixture(scope='session')
+@pytest_asyncio.fixture(scope='session')
 async def root_directory(pytestconfig: PytestConfig) -> Path:
     """Return the root path of pytest."""
     return pytestconfig.rootpath
 
 
-@pytest.fixture(scope='session')
+@pytest_asyncio.fixture(scope='session')
 async def mongod_binary(root_directory: Path) -> Path:
     # pylint: disable=redefined-outer-name
     """Return a path to a mongod binary."""
@@ -54,18 +55,14 @@ def new_port() -> int:
     return port
 
 
-async def _database_path() -> AsyncIterator[Path]:
+@pytest.fixture(scope="session")
+def database_path() -> Iterator[str]:
     """Yield a database path for a mongod process to store data."""
     with tempfile.TemporaryDirectory() as tmpdirname:
         yield tmpdirname
 
 
-database_path = pytest.fixture(fixture_function=_database_path,
-                               scope='session',
-                               name="database_path")
-
-
-@pytest.fixture(scope='session')
+@pytest_asyncio.fixture(scope='session')
 async def mongod_socket(new_port: int, database_path: Path,
                         mongod_binary: Path) -> AsyncIterator[str]:
     # pylint: disable=redefined-outer-name
@@ -92,7 +89,7 @@ async def mongod_socket(new_port: int, database_path: Path,
 
 
 @pytest.fixture(scope="session")
-async def __motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
+def __motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
     # pylint: disable=redefined-outer-name
     """Yield a Motor client."""
     connection_string = f'mongodb://{mongod_socket}'
@@ -105,7 +102,7 @@ async def __motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient
     motor_client_.close()
 
 
-@pytest.fixture(scope='function')
+@pytest_asyncio.fixture(scope='function')
 async def motor_client(__motor_client: AsyncIterator[AsyncIOMotorClient]) -> AsyncIterator[AsyncIOMotorClient]:
     # pylint: disable=redefined-outer-name
     """Yield a Motor client."""
