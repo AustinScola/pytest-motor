@@ -54,8 +54,10 @@ class MongodBinary:
             distro_name = distro.id()
             if distro_name == 'ubuntu':
                 return 'linux-x86_64-' + MongodBinary.__select_ubuntu_version()
-            if distro_name == 'debian':
+            elif distro_name == 'debian':
                 return 'linux-x86_64-' + MongodBinary.__select_debian_version()
+            else:
+                return "linux-x86_64-" + "ubuntu1804"
             # FUTURE: distros that may be added: Amazon Linux, CentOS, SUSE
             raise OSError(f"Your distro ({distro_name}) is unsupported.")
 
@@ -135,12 +137,14 @@ class MongodBinary:
             raise OSError(
                 "Your Debian version is too old. Upgrade at least to 9.")  # pragma: no cover
 
-        if distro.version() == '9.2':
+        if distro.version().startswith('9'):
             MongodBinary.warn_untested_os()
             return 'debian92'
-        if distro.version() == '10.0':
+        if distro.version().startswith('10'):
             MongodBinary.warn_untested_os()
             return 'debian10'
+        if distro.version().startswith('11'):
+            return 'ubuntu1804'
 
         warnings.warn("Can't detect your Debian version. Fallback to 9.2.")
         return 'debian92'

@@ -1,10 +1,12 @@
 """A pytest plugin which helps test applications using Motor."""
 import asyncio
 import socket
+import tempfile
 from pathlib import Path
 from typing import AsyncIterator, Iterator, List
 
 import pytest
+import pytest_asyncio
 from _pytest.config import Config as PytestConfig
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -26,17 +28,13 @@ def _event_loop() -> Iterator[asyncio.AbstractEventLoop]:
 event_loop = pytest.fixture(fixture_function=_event_loop, scope='session', name="event_loop")
 
 
-async def _root_directory(pytestconfig: PytestConfig) -> Path:
+@pytest_asyncio.fixture(scope='session')
+async def root_directory(pytestconfig: PytestConfig) -> Path:
     """Return the root path of pytest."""
     return pytestconfig.rootpath
 
 
-root_directory = pytest.fixture(fixture_function=_root_directory,
-                                scope='session',
-                                name='root_directory')
-
-
-@pytest.fixture(scope='session')
+@pytest_asyncio.fixture(scope='session')
 async def mongod_binary(root_directory: Path) -> Path:
     # pylint: disable=redefined-outer-name
     """Return a path to a mongod binary."""
@@ -47,27 +45,24 @@ async def mongod_binary(root_directory: Path) -> Path:
     return binary.path
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def new_port() -> int:
     """Return an unused port for mongod to run on."""
     port: int = 27017
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as opened_socket:
-        opened_socket.bind(('127.0.0.1', 0))  # system will automaticly assign port
+        opened_socket.bind(("127.0.0.1", 0))  # system will automaticly assign port
         port = opened_socket.getsockname()[1]
     return port
 
 
-async def _database_path(tmp_path: Path) -> AsyncIterator[Path]:
+@pytest.fixture(scope="session")
+def database_path() -> Iterator[str]:
     """Yield a database path for a mongod process to store data."""
-    yield tmp_path
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        yield tmpdirname
 
 
-database_path = pytest.fixture(fixture_function=_database_path,
-                               scope='function',
-                               name='database_path')
-
-
-@pytest.fixture(scope='function')
+@pytest_asyncio.fixture(scope='session')
 async def mongod_socket(new_port: int, database_path: Path,
                         mongod_binary: Path) -> AsyncIterator[str]:
     # pylint: disable=redefined-outer-name
@@ -93,8 +88,8 @@ async def mongod_socket(new_port: int, database_path: Path,
         pass
 
 
-@pytest.fixture(scope='function')
-async def motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
+@pytest.fixture(scope="session")
+def __motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
     # pylint: disable=redefined-outer-name
     """Yield a Motor client."""
     connection_string = f'mongodb://{mongod_socket}'
@@ -105,3 +100,16 @@ async def motor_client(mongod_socket: str) -> AsyncIterator[AsyncIOMotorClient]:
     yield motor_client_
 
     motor_client_.close()
+
+
+@pytest_asyncio.fixture(scope='function')
+async def motor_client(__motor_client: AsyncIterator[AsyncIOMotorClient]) -> AsyncIterator[AsyncIOMotorClient]:
+    # pylint: disable=redefined-outer-name
+    """Yield a Motor client."""
+    yield __motor_client
+
+    dbs = await __motor_client.list_database_names()
+
+    for db in dbs:
+        if db not in ["config", "admin", "local"]:
+            await __motor_client.drop_database(db)
